@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Drag-and-drop audio selection and automatic upload batches, preserving per-file metadata and playlist choices.
+- Read-only Linux host CPU, memory, uptime and temperature monitoring on the station status page.
+- Audio preparation verifies decoded duration instead of trusting container duration estimates.
+- Host monitoring changes the Compose configuration and requires a manual migration on existing installations.
+
 ## 0.1.0-beta.1 · initial release preparation
 
 - Audio library, editorial metadata, playlists and jingles.

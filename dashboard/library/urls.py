@@ -5,6 +5,7 @@ from . import site_config, system_views, restore_views, reset_views, backup_view
 app_name = "library"
 urlpatterns = [
     path("maintenance/configuration/", site_config.index, name="configuration"),
+    path("maintenance/status/host/", system_views.host_status, name="host_status"),
     path("maintenance/status/", system_views.index, name="system_status"),
     path("maintenance/restore/", restore_views.index, name="restore"),
     path("maintenance/reset/", reset_views.index, name="reset"),

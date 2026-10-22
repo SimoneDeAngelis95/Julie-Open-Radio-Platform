@@ -53,3 +53,12 @@ The proxy template requires Compose >=2.24.4 for `!override`. Retain Caddy’s v
 Include `.env.proxy` and Caddy volumes in server backups: application configuration backups do not automatically include them. The proxy Compose template itself is included in the saved source files.
 
 References: [Django HTTPS proxy settings](https://docs.djangoproject.com/en/5.2/ref/settings/#secure-proxy-ssl-header), [Caddy reverse proxy](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy), [Compose merge rules](https://docs.docker.com/reference/compose-file/merge/).
+
+
+### Host resource monitoring
+
+The radio status page displays Linux host CPU usage, RAM usage and available memory, uptime and the highest available thermal-zone reading. Disk space refers to the audio and backup filesystems shown on the same page. Temperature may be unavailable or refer to a sensor other than the CPU. These figures describe the whole host, not individual Julie containers. On Docker Desktop they describe the Docker Linux virtual machine.
+
+Only the dashboard receives read-only mounts of `/proc/stat`, `/proc/meminfo`, `/proc/uptime` and `/sys`. No Docker socket, privileged mode or process control is required. Administrators alone can read the metrics endpoint; readings refresh every five seconds while the page is visible. Unavailable readings remain explicitly unknown.
+
+Existing installations require the updated Compose configuration and recreation of the dashboard container to enable these mounts. The guarded updater rejects Compose changes: follow the manual migration process for this release instead of bypassing that check.

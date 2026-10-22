@@ -1,6 +1,13 @@
 {% extends 'base.html' %}{% block title %}Stato della radio{% endblock %}{% block content %}
 <div class="page-heading"><div><h1>Stato della radio</h1><p class="intro">Le informazioni utili per prenderti cura della tua radio.</p></div><a class="button secondary" href="{% url 'library:system_status' %}">Aggiorna</a></div>
 <div class="studio-grid">
+<section class="card" data-host-monitor data-url="{% url 'library:host_status' %}"><h2>Computer della radio</h2>
+<p data-host-message role="status">Lettura delle risorse in corso…</p>
+<dl><dt>CPU</dt><dd data-host-cpu>In attesa del primo campione</dd>
+<dt>Memoria RAM</dt><dd data-host-memory>Non disponibile</dd>
+<dt>Acceso da</dt><dd data-host-uptime>Non disponibile</dd>
+<dt>Temperatura più alta rilevata</dt><dd data-host-temperature>Non disponibile</dd></dl>
+<p class="help-text">Risorse complessive dell’host Linux. Aggiornamento ogni 5 secondi. Lo spazio dei dischi audio e backup è riportato qui sotto.</p></section>
 <section class="card"><h2>Trasmissione</h2>
 {% if paused %}<p><strong>Radio in pausa</strong></p><p>La trasmissione è stata fermata da Manutenzione.</p>{% endif %}
 {% if fresh %}<p>Stream: <strong>{% if snapshot.stream_online == True %}Online{% elif snapshot.stream_online == False %}Non disponibile{% else %}Stato non disponibile{% endif %}</strong></p><p>Motore audio: <strong>{% if snapshot.engine_online %}Collegato{% else %}Non raggiungibile{% endif %}</strong></p>{% else %}<p><strong>Stato non aggiornato</strong></p><p>Non ci sono informazioni recenti: questo non significa necessariamente che la radio sia ferma.</p>{% endif %}

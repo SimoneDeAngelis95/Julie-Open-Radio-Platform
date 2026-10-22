@@ -1050,3 +1050,10 @@ input[type="checkbox"] { width: 18px !important; height: 18px; accent-color: var
 .sidebar{overflow-y:auto}.sidebar>.brand,.sidebar>.brand-caption,.sidebar>.workspace-label,.sidebar>nav,.sidebar-bottom{flex-shrink:0}.maintenance-menu>div{display:flex;flex-direction:column;gap:6px;padding-left:18px}.maintenance-menu>div>a{display:block;padding:10px 12px;border-radius:8px}.maintenance-menu>div>a:hover{background:#244347}
 
 .restore-upload input[type=file]{display:block;width:100%;border:1px solid var(--line);padding:18px;border-radius:9px;background:#f7f9f7;margin-top:10px}.restore-upload input::file-selector-button{border:1px solid #bfd0c9;border-radius:6px;background:white;color:var(--teal);font-weight:600;padding:10px 14px;margin-right:12px;cursor:pointer}
+
+.upload-zone.is-dragging {
+  border-color: var(--accent, #e5bc4b);
+  background-color: rgba(229, 188, 75, 0.12);
+  outline: 2px solid var(--accent, #e5bc4b);
+  outline-offset: 3px;
+}

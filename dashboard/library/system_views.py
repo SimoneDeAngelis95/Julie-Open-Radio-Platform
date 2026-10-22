@@ -5,11 +5,13 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from .host_metrics import read_metrics
 from .models import Asset, BackupJob, Broadcast, BroadcastSeries, RadioSnapshot
 from .storage import data_path
 
@@ -94,3 +96,10 @@ def index(request):
             "series_errors": series.order_by("id")[:10],
         },
     )
+
+
+@user_passes_test(lambda user: user.is_authenticated and user.is_superuser)
+@require_GET
+@never_cache
+def host_status(request):
+    return JsonResponse(read_metrics())

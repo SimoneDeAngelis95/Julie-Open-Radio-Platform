@@ -57,31 +57,121 @@
     const names = form.querySelector('[data-file-list]');
     const progress = form.querySelector('[data-upload-progress]');
     const button = form.querySelector('[data-upload-button]');
-    input.addEventListener('change', () => {
-      names.textContent = [...input.files].map((file) => file.name).join(' · ') || 'Nessun file selezionato';
-    });
-    form.addEventListener('submit', (event) => {
-      if (!form.checkValidity()) return;
-      event.preventDefault();
-      const request = new XMLHttpRequest();
-      request.open('POST', form.action || location.href);
-      request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-      request.upload.addEventListener('progress', (event) => {
-        progress.textContent = event.lengthComputable ? `Caricamento: ${Math.round(event.loaded / event.total * 100)}%` : 'Caricamento in corso…';
+    let busy = false;
+    const dropZone = form.querySelector('.upload-zone');
+    if (dropZone) {
+      let dragDepth = 0;
+      const hasFiles = event => [...(event.dataTransfer?.types || [])].includes('Files');
+      dropZone.addEventListener('dragenter', event => {
+        if (!hasFiles(event)) return;
+        event.preventDefault();
+        dragDepth += 1;
+        if (!busy) dropZone.classList.add('is-dragging');
       });
-      request.upload.addEventListener('load', () => { progress.textContent = 'Caricamento completato. Salvataggio dei file…'; });
-      request.addEventListener('load', () => {
+      dropZone.addEventListener('dragover', event => {
+        if (!hasFiles(event)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = busy ? 'none' : 'copy';
+      });
+      dropZone.addEventListener('dragleave', event => {
+        event.preventDefault();
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (!dragDepth) dropZone.classList.remove('is-dragging');
+      });
+      dropZone.addEventListener('drop', event => {
+        if (!hasFiles(event)) return;
+        event.preventDefault();
+        dragDepth = 0;
+        dropZone.classList.remove('is-dragging');
+        if (busy) return;
+        const items = [...(event.dataTransfer.items || [])];
+        if (items.some(item => item.webkitGetAsEntry?.()?.isDirectory)) {
+          progress.textContent = 'Trascina i file audio, non le cartelle.';
+          return;
+        }
+        if (!event.dataTransfer.files.length) return;
         try {
-          const data = JSON.parse(request.responseText);
-          if (request.status === 200 && data.redirect) { location.assign(data.redirect); return; }
-          progress.textContent = data.error || 'Caricamento non riuscito. Controlla i file e riprova.';
-        } catch (_) { progress.textContent = 'Sessione scaduta o caricamento non riuscito. Ricarica la pagina e riprova.'; }
-        button.disabled = false;
+          input.files = event.dataTransfer.files;
+          input.dispatchEvent(new Event('change', {bubbles: true}));
+          progress.textContent = `${input.files.length} file selezionati. Controlla i dettagli e premi Carica.`;
+        } catch (_) {
+          progress.textContent = 'Usa il pulsante Seleziona file per scegliere gli audio.';
+        }
       });
-      request.addEventListener('error', () => { progress.textContent = 'Connessione interrotta. Puoi riprovare: i duplicati verranno riconosciuti.'; button.disabled = false; });
+    }
+    input.addEventListener('change', () => {
+      names.textContent = [...input.files].map(file => file.name).join(' · ') || 'Nessun file selezionato';
+    });
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (busy || !form.reportValidity()) return;
+      const files = [...input.files];
+      const original = new FormData(form);
+      if (original.get('schedule') && files.length !== 1) {
+        progress.textContent = 'Per caricare e programmare scegli un podcast alla volta.';
+        return;
+      }
+      busy = true;
       button.disabled = true;
-      progress.textContent = 'Caricamento in corso…';
-      request.send(new FormData(form));
+      let completed = 0;
+      let redirect = null;
+      const controls = [...form.querySelectorAll('input,select,textarea')];
+      const disabled = controls.map(control => control.disabled);
+      controls.forEach(control => { control.disabled = true; });
+      const beforeUnload = event => { event.preventDefault(); event.returnValue = ''; };
+      window.addEventListener('beforeunload', beforeUnload);
+      try {
+        for (let offset = 0; offset < files.length; offset += 20) {
+          const batch = files.slice(offset, offset + 20);
+          const payload = new FormData();
+          for (const [key, value] of original.entries()) {
+            if (key !== input.name && !/^file_(title|artist|description)_\d+$/.test(key)) payload.append(key, value);
+          }
+          batch.forEach((file, index) => {
+            payload.append(input.name, file);
+            ['title', 'artist', 'description'].forEach(field => {
+              const key = `file_${field}_${offset + index}`;
+              if (original.has(key)) payload.append(`file_${field}_${index}`, original.get(key));
+            });
+          });
+          progress.textContent = `Invio dei file ${offset + 1}–${offset + batch.length} di ${files.length}…`;
+          const result = await new Promise((resolve, reject) => {
+            const request = new XMLHttpRequest();
+            request.open('POST', form.action || location.href);
+            request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            request.upload.addEventListener('progress', event => {
+              const fraction = event.lengthComputable ? event.loaded / event.total : 0;
+              const percent = Math.floor((completed + fraction * batch.length) / files.length * 100);
+              progress.textContent = `Caricamento: ${percent}% · ${completed} di ${files.length} file elaborati`;
+            });
+            request.upload.addEventListener('load', () => {
+              progress.textContent = `Salvataggio dei file ${offset + 1}–${offset + batch.length} di ${files.length}…`;
+            });
+            request.addEventListener('load', () => {
+              try {
+                const data = JSON.parse(request.responseText);
+                if (request.status === 200 && data.redirect) resolve(data);
+                else reject(new Error(data.error || 'Caricamento non riuscito. Controlla i file e riprova.'));
+              } catch (_) {
+                reject(new Error(request.status === 403 ? 'Accesso non valido: ricarica la pagina e riprova.' : 'Risposta del server non valida. Ricarica la pagina e riprova.'));
+              }
+            });
+            request.addEventListener('error', () => reject(new Error('Connessione interrotta.')));
+            request.addEventListener('abort', () => reject(new Error('Caricamento interrotto.')));
+            request.send(payload);
+          });
+          completed += batch.length;
+          redirect = result.redirect;
+        }
+        if (redirect) location.assign(redirect);
+      } catch (error) {
+        progress.textContent = `${error.message} ${completed} di ${files.length} file già elaborati. Puoi riprovare: i duplicati verranno riconosciuti.`;
+      } finally {
+        busy = false;
+        button.disabled = false;
+        controls.forEach((control, index) => { control.disabled = disabled[index]; });
+        window.removeEventListener('beforeunload', beforeUnload);
+      }
     });
   }
 })();
@@ -347,3 +437,50 @@ if (uploadMetadata) {
   category.addEventListener('change', updateCategory);
   updateCategory();
 }
+
+
+// Each open page computes CPU use from two host counter snapshots.
+(() => {
+  const card = document.querySelector('[data-host-monitor]');
+  if (!card) return;
+  const field = name => card.querySelector(`[data-host-${name}]`);
+  let previous = null;
+  let timer = null;
+  let busy = false;
+  const formatBytes = value => `${(value / 1024 ** 3).toLocaleString('it-IT', {maximumFractionDigits: 1})} GB`;
+  const poll = async () => {
+    if (document.hidden || busy) return;
+    busy = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    try {
+      const response = await fetch(card.dataset.url, {credentials: 'same-origin', cache: 'no-store', signal: controller.signal});
+      if (!response.ok || response.redirected) throw new Error();
+      const data = await response.json();
+      field('message').textContent = data.available ? `Ultimo controllo: ${new Date().toLocaleTimeString('it-IT')}` : 'Monitoraggio host non disponibile su questa installazione.';
+      const cpu = data.cpu;
+      const total = cpu && previous ? cpu.total - previous.total : 0;
+      const idle = cpu && previous ? cpu.idle - previous.idle : 0;
+      field('cpu').textContent = total > 0 && idle >= 0 && idle <= total ? `${Math.round(100 * (1 - idle / total))}% · ${cpu.cores} core` : cpu ? 'Calcolo in corso…' : 'Non disponibile';
+      previous = cpu;
+      field('memory').textContent = data.memory ? `${formatBytes(data.memory.used)} / ${formatBytes(data.memory.total)} (${data.memory.percent}%) · ${formatBytes(data.memory.available)} disponibili` : 'Non disponibile';
+      const uptime = data.uptime_seconds;
+      field('uptime').textContent = uptime !== null ? `${Math.floor(uptime / 86400)} giorni, ${Math.floor(uptime % 86400 / 3600)} ore, ${Math.floor(uptime % 3600 / 60)} minuti` : 'Non disponibile';
+      field('temperature').textContent = data.temperature !== null ? `${data.temperature.toLocaleString('it-IT')} °C` : 'Non disponibile';
+    } catch (_) {
+      previous = null;
+      ['cpu', 'memory', 'uptime', 'temperature'].forEach(name => { field(name).textContent = 'Non disponibile'; });
+      field('message').textContent = 'Dati non aggiornati. Nuovo tentativo automatico tra pochi secondi.';
+    } finally {
+      clearTimeout(timeout);
+      busy = false;
+      if (!document.hidden) timer = setTimeout(poll, 5000);
+    }
+  };
+  document.addEventListener('visibilitychange', () => {
+    clearTimeout(timer);
+    previous = null;
+    if (!document.hidden) poll();
+  });
+  poll();
+})();

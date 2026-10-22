@@ -26,6 +26,8 @@ services:
     image: julie-dashboard:local
     user: "${JULIE_UID:-1000}:${JULIE_GID:-1000}"
     build: ./dashboard
+    environment:
+      JULIE_HOST_METRICS_ROOT: /host
     restart: unless-stopped
     env_file: .env.dashboard
     ports:
@@ -33,6 +35,30 @@ services:
     volumes:
       - ./audio/library:/data
       - ./backups/exports:/backups
+      - type: bind
+        source: /proc/stat
+        target: /host/stat
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /proc/meminfo
+        target: /host/meminfo
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /proc/uptime
+        target: /host/uptime
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /sys
+        target: /host/sys
+        read_only: true
+        bind:
+          create_host_path: false
     depends_on:
       dashboard-init:
         condition: service_completed_successfully

@@ -16,7 +16,7 @@ def command(arguments, deadline):
         raise AudioError("Tempo massimo di preparazione superato.")
     try:
         result = subprocess.run(
-            arguments, capture_output=True, text=True, timeout=remaining
+            arguments, capture_output=True, text=True, timeout=remaining, check=False
         )
     except subprocess.TimeoutExpired as error:
         raise AudioError("Tempo massimo di preparazione superato.") from error
@@ -63,7 +63,9 @@ def measure(path, deadline):
             "-map",
             "0:a:0",
             "-af",
-            "loudnorm=I=-20:TP=-1.5:LRA=50:print_format=json",
+            "loudnorm=I=-20:TP=-1.5:LRA=50:print_format=json,asetpts=N/SR/TB",
+            "-progress",
+            "pipe:1",
             "-f",
             "null",
             "-",
@@ -81,6 +83,19 @@ def measure(path, deadline):
         raise AudioError("Misurazione del volume non disponibile.") from error
     if not all(math.isfinite(value) for value in values.values()):
         raise AudioError("Il file è silenzioso o il volume non è misurabile.")
+    try:
+        # Output timestamps are rebuilt from decoded samples, not container estimates.
+        durations = [
+            int(line.split("=", 1)[1]) / 1_000_000
+            for line in result.stdout.splitlines()
+            if line.startswith("out_time_us=")
+        ]
+        duration = durations[-1]
+        if not math.isfinite(duration) or duration <= 0:
+            raise ValueError
+    except (ValueError, IndexError) as error:
+        raise AudioError("Durata dell’audio decodificato non disponibile.") from error
+    values["duration"] = duration
     return values
 
 
@@ -92,14 +107,12 @@ def prepare(original, workspace, target, ceiling):
         stream.get("codec_type") == "audio" for stream in info.get("streams", [])
     ):
         raise AudioError("Il file non contiene una traccia audio.")
-    duration = float(info.get("format", {}).get("duration", 0))
-    if not math.isfinite(duration) or duration <= 0:
-        raise AudioError("Durata del file non valida.")
     tags = {
         key.lower(): str(value)
         for key, value in info.get("format", {}).get("tags", {}).items()
     }
     before = measure(original, deadline)
+    duration = before["duration"]
     gain = min(target - before["input_i"], ceiling - 0.2 - before["input_tp"])
     prepared = workspace / "prepared.flac"
     for _ in range(3):
@@ -154,13 +167,16 @@ def prepare(original, workspace, target, ceiling):
         or audio["channels"] != 2
     ):
         raise AudioError("La copia preparata ha un formato inatteso.")
-    if abs(duration - float(final["format"]["duration"])) > 0.25:
+    final_duration = float(final["format"]["duration"])
+    if not math.isfinite(final_duration) or final_duration <= 0:
+        raise AudioError("Durata del file preparato non valida.")
+    if abs(duration - final_duration) > 0.25:
         raise AudioError("La durata è cambiata durante la preparazione.")
     if after["input_i"] > target + 0.3:
         raise AudioError("Il livello finale supera quello previsto.")
     return {
         "path": prepared,
-        "duration": duration,
+        "duration": final_duration,
         "tags": tags,
         "before": before,
         "after": after,
