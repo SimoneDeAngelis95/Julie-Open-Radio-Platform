@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refresh the host resource overview with distinct metric tiles, CPU/RAM meters and explicit freshness indicators.
+
 - Add a scoped uninstaller with data-preserving, purge and whole-directory removal modes, dry-run inspection and explicit confirmation.
 
 - Editable audio normalization preferences in initial setup and Configuration, with an explicitly confirmed background library reprocessing queue that preserves available audio and Replay versions.

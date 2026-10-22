@@ -448,6 +448,11 @@ if (uploadMetadata) {
   let timer = null;
   let busy = false;
   const formatBytes = value => `${(value / 1024 ** 3).toLocaleString('it-IT', {maximumFractionDigits: 1})} GB`;
+  const meter = (name, value) => {
+    const element = field(`${name}-meter`);
+    element.hidden = value === null;
+    if (value !== null) element.value = value;
+  };
   const poll = async () => {
     if (document.hidden || busy) return;
     busy = true;
@@ -457,19 +462,33 @@ if (uploadMetadata) {
       const response = await fetch(card.dataset.url, {credentials: 'same-origin', cache: 'no-store', signal: controller.signal});
       if (!response.ok || response.redirected) throw new Error();
       const data = await response.json();
+      card.dataset.state = data.available ? 'ready' : 'unknown';
+      field('state').textContent = data.available ? 'Dati aggiornati' : 'Non disponibile';
       field('message').textContent = data.available ? `Ultimo controllo: ${new Date().toLocaleTimeString('it-IT')}` : 'Monitoraggio host non disponibile su questa installazione.';
       const cpu = data.cpu;
       const total = cpu && previous ? cpu.total - previous.total : 0;
       const idle = cpu && previous ? cpu.idle - previous.idle : 0;
-      field('cpu').textContent = total > 0 && idle >= 0 && idle <= total ? `${Math.round(100 * (1 - idle / total))}% · ${cpu.cores} core` : cpu ? 'Calcolo in corso…' : 'Non disponibile';
+      const cpuPercent = total > 0 && idle >= 0 && idle <= total ? Math.round(100 * (1 - idle / total)) : null;
+      field('cpu').textContent = cpuPercent !== null ? `${cpuPercent}%` : '—';
+      field('cpu-detail').textContent = cpuPercent !== null ? `${cpu.cores} core logici` : cpu ? 'Calcolo in corso…' : 'Non disponibile';
+      meter('cpu', cpuPercent);
       previous = cpu;
-      field('memory').textContent = data.memory ? `${formatBytes(data.memory.used)} / ${formatBytes(data.memory.total)} (${data.memory.percent}%) · ${formatBytes(data.memory.available)} disponibili` : 'Non disponibile';
+      field('memory').textContent = data.memory ? `${data.memory.percent.toLocaleString('it-IT')}%` : '—';
+      field('memory-detail').textContent = data.memory ? `${formatBytes(data.memory.used)} di ${formatBytes(data.memory.total)} usati` : 'Non disponibile';
+      field('memory-available').textContent = data.memory ? `${formatBytes(data.memory.available)} disponibili` : '';
+      meter('memory', data.memory ? data.memory.percent : null);
       const uptime = data.uptime_seconds;
-      field('uptime').textContent = uptime !== null ? `${Math.floor(uptime / 86400)} giorni, ${Math.floor(uptime % 86400 / 3600)} ore, ${Math.floor(uptime % 3600 / 60)} minuti` : 'Non disponibile';
-      field('temperature').textContent = data.temperature !== null ? `${data.temperature.toLocaleString('it-IT')} °C` : 'Non disponibile';
+      field('uptime').textContent = uptime !== null ? uptime >= 86400 ? `${Math.floor(uptime / 86400)} g · ${Math.floor(uptime % 86400 / 3600)} h` : `${Math.floor(uptime / 3600)} h · ${Math.floor(uptime % 3600 / 60)} min` : '—';
+      field('temperature').textContent = data.temperature !== null ? `${data.temperature.toLocaleString('it-IT')} °C` : '—';
     } catch (_) {
       previous = null;
-      ['cpu', 'memory', 'uptime', 'temperature'].forEach(name => { field(name).textContent = 'Non disponibile'; });
+      card.dataset.state = 'stale';
+      field('state').textContent = 'Dati non aggiornati';
+      ['cpu', 'memory', 'uptime', 'temperature'].forEach(name => { field(name).textContent = '—'; });
+      ['cpu-detail', 'memory-detail'].forEach(name => { field(name).textContent = 'Non disponibile'; });
+      field('memory-available').textContent = '';
+      meter('cpu', null);
+      meter('memory', null);
       field('message').textContent = 'Dati non aggiornati. Nuovo tentativo automatico tra pochi secondi.';
     } finally {
       clearTimeout(timeout);
