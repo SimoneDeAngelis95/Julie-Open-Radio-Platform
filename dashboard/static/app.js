@@ -163,7 +163,11 @@
           completed += batch.length;
           redirect = result.redirect;
         }
-        if (redirect) location.assign(redirect);
+        if (redirect) {
+          // Navigation after successful saving is intentional, not an interrupted upload.
+          window.removeEventListener('beforeunload', beforeUnload);
+          location.assign(redirect);
+        }
       } catch (error) {
         progress.textContent = `${error.message} ${completed} di ${files.length} file già elaborati. Puoi riprovare: i duplicati verranno riconosciuti.`;
       } finally {
