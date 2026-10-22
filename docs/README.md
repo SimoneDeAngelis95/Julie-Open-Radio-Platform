@@ -4,6 +4,7 @@
 | --- | --- |
 | [Installation](installation.md) | Requirements, first startup and access |
 | [Updates](updating.md) | Release updates, safety backups and recovery |
+| [Uninstalling](uninstalling.md) | Remove services or intentionally delete a station |
 | [Configuration](configuration.md) | Addresses, domains, HTTPS and server settings |
 | [Using the station](usage.md) | Music, jingles, podcasts and live broadcasts |
 | [Backup and restore](backup.md) | Backups, restore and reset |

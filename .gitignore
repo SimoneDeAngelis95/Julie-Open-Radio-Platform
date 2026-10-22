@@ -33,3 +33,5 @@ staticfiles/
 .env.proxy
 
 .update.lock
+
+.uninstall.lock

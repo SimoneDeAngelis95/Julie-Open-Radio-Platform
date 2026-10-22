@@ -33,6 +33,8 @@ jobs:
           pip install -r dashboard/requirements.txt
       - name: Check installation generator
         run: python scripts/test_installation.py
+      - name: Check uninstaller safety boundaries
+        run: python scripts/test_uninstall.py
       - name: Check release updater
         run: python scripts/test_update.py
       - name: Build static assets

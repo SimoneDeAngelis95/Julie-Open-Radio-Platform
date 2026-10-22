@@ -93,3 +93,8 @@ The installation owner must be able to read and write the project directory. App
 Running setup again with a complete configuration preserves existing secrets; it does not update saved hostnames or ports. If initial setup was interrupted and files are missing, it stops rather than overwriting them. Complete or recover that configuration before continuing. Do not delete a working station’s files to force a new installation.
 
 For future release upgrades, use [Updating Julie](updating.md). Before allowing Internet access, follow [Configuration](configuration.md).
+
+
+## Uninstall
+
+Use `./uninstall.sh` to remove services while retaining the station, or add `--purge` to start from an empty station. See [Uninstalling Julie](uninstalling.md) before deleting data or the installation folder.

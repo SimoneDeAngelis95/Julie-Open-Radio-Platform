@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a scoped uninstaller with data-preserving, purge and whole-directory removal modes, dry-run inspection and explicit confirmation.
+
 - Editable audio normalization preferences in initial setup and Configuration, with an explicitly confirmed background library reprocessing queue that preserves available audio and Replay versions.
 
 - Show the existing installation code and panel address at the end of first-run installation.
