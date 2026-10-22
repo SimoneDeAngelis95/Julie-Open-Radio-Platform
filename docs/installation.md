@@ -4,7 +4,7 @@
 
 - A 64-bit Linux system, the recommended platform; no desktop environment is needed.
 - A regular user account with SSH access and permission to use sudo.
-- Python 3, Git, Docker Engine and the Docker Compose plugin.
+- Python 3.9 or later, Git, Docker Engine and the Docker Compose plugin.
 - Storage for original files, processed audio and backups. Capacity depends on the library.
 
 The services use Linux containers. All container images must support the host architecture. The setup scripts require a Linux environment: installing Docker Desktop on macOS or Windows does not automatically make the installation procedure compatible. No certified minimum RAM requirement has been established.
@@ -90,4 +90,4 @@ The installation owner must be able to read and write the project directory. App
 
 Running setup again with a complete configuration preserves existing secrets; it does not update saved hostnames or ports. If initial setup was interrupted and files are missing, it stops rather than overwriting them. Complete or recover that configuration before continuing. Do not delete a working station’s files to force a new installation.
 
-Before allowing Internet access, follow [Configuration](configuration.md).
+For future release upgrades, use [Updating Julie](updating.md). Before allowing Internet access, follow [Configuration](configuration.md).

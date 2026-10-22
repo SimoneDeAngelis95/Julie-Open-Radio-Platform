@@ -8,6 +8,7 @@
 - Public Replay and calendar APIs.
 - Listener history and station status.
 - Full backups, restore and reset with safety copies.
+- Release updater with verified full backup, preserved data mounts and failure recovery.
 - First-run setup and configurable public addresses.
 - Docker Compose package and documentation for a new Linux installation.
 

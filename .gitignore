@@ -31,3 +31,5 @@ staticfiles/
 .vscode/
 .install.lock
 .env.proxy
+
+.update.lock

@@ -6,6 +6,7 @@ Python 3.13 and ffmpeg are required to run audio tests outside Docker. Create a 
 
 ```sh
 python3 scripts/test_installation.py
+python3 scripts/test_update.py
 JULIE_TESTING=1 python3 dashboard/manage.py collectstatic --noinput
 JULIE_TESTING=1 python3 dashboard/manage.py test library --noinput
 JULIE_TESTING=1 python3 dashboard/manage.py makemigrations --check --dry-run
@@ -32,18 +33,9 @@ Syntax checks and unit tests do not replace this complete-system validation. Pac
 
 ## Update a station
 
-1. Create and download a full backup.
-2. Read the target version’s release notes and schedule downtime if needed.
-3. Fetch the code and check out the release tag.
-4. Rebuild images, apply migrations and recreate application services.
+Use `./update.sh RELEASE_TAG` from the installation directory. The updater requires a verified full backup and preserves local configuration and data mounts. It does not support downgrades or engine/topology changes. Read [Updating Julie](updating.md) for the complete process and failure recovery.
 
-```sh
-./julie build dashboard
-./julie run --rm --no-deps dashboard python manage.py migrate --noinput
-./julie up -d dashboard dashboard-worker dashboard-scheduler dashboard-listening dashboard-backup
-```
-
-This updates the dashboard; it does not automatically apply Liquidsoap or Icecast changes. Follow the release notes for engine changes. An older tag may not support a newer database schema: checking out old code is not a database rollback.
+A previous source tag may not support a newer database schema. Checking out old code is not a database rollback.
 
 ## Releases
 

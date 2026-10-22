@@ -3,6 +3,7 @@
 | Guide | Contents |
 | --- | --- |
 | [Installation](installation.md) | Requirements, first startup and access |
+| [Updates](updating.md) | Release updates, safety backups and recovery |
 | [Configuration](configuration.md) | Addresses, domains, HTTPS and server settings |
 | [Using the station](usage.md) | Music, jingles, podcasts and live broadcasts |
 | [Backup and restore](backup.md) | Backups, restore and reset |

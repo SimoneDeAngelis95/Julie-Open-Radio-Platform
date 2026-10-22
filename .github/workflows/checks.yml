@@ -29,10 +29,12 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends ffmpeg postgresql-client-17
+          apt-get install -y --no-install-recommends ffmpeg postgresql-client-17 git
           pip install -r dashboard/requirements.txt
       - name: Check installation generator
         run: python scripts/test_installation.py
+      - name: Check release updater
+        run: python scripts/test_update.py
       - name: Build static assets
         run: python dashboard/manage.py collectstatic --noinput
       - name: Check migrations

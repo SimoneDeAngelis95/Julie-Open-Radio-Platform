@@ -18,9 +18,9 @@ The interface is currently **in Italian**. Multilingual support is a possible fu
 
 ## Getting started
 
-**Linux is the recommended platform**, including headless servers. Julie runs Linux containers with Docker Compose. Read [Installation](docs/installation.md) before running the scripts: Docker Engine, Compose and Python 3 are required.
+**Linux is the recommended platform**, including headless servers. Julie runs Linux containers with Docker Compose. Read [Installation](docs/installation.md) before running the scripts: Docker Engine, Compose and Python 3.9 or later are required.
 
-Julie runs from the directory where you clone the repository. Audio is stored in `audio/library/` inside that directory, outside the containers. See [data locations](docs/installation.md#data-locations) and [docs](docs/README.md) for details.
+Julie runs from the directory where you clone the repository. Audio is stored in `audio/library/` inside that directory, outside the containers. See [data locations](docs/installation.md#data-locations), [release updates](docs/updating.md) and [docs](docs/README.md) for details.
 
 **Status:** first beta (`0.1.0-beta.1`). Validate the complete installation on the target system before continuous use. Extended operation and recovery after unexpected interruptions still need further testing.
 
