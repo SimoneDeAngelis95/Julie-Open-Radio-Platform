@@ -72,7 +72,7 @@ Julie runs from the directory where you clone the repository and run `./install.
 | `audio/library/originals/` | Uploaded originals |
 | `audio/library/ready/` | Processed copies for playout |
 | `audio/library/ready/replay/` | MP3 copies for public Replay |
-| `audio/library/work/` and `staging/` | Temporary processing and upload files |
+| `audio/library/work/` and `audio/library/staging/` | Temporary processing and upload files |
 | `backups/exports/` | Backups prepared by the application |
 | `.env`, `.env.dashboard`, `config/icecast.xml` | Local configuration and credentials |
 
