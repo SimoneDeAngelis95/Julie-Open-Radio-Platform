@@ -2,28 +2,28 @@
 
 # Julie · Open Radio Platform
 
-Una piattaforma libera per gestire una radio scolastica dal browser: musica, jingle, podcast e dirette, con una regia automatica che continua a funzionare anche quando il pannello non è aperto.
+A free software platform for running a school radio station from a browser: music, jingles, podcasts and live broadcasts, with an automated playout engine that keeps working when the dashboard is closed.
 
-Il progetto nasce presso **I.I.S. Medaglia D’Oro**, oggi **I.I.S. San Benedetto – Sede Medaglia D’Oro**, per costruire uno strumento semplice e riutilizzabile anche in altre scuole.
+The project was born at **I.I.S. Medaglia D’Oro**, now **I.I.S. San Benedetto – Sede Medaglia D’Oro**, to build a simple platform that other schools and communities can reuse.
 
-## Cosa offre
+## Features
 
-- Libreria audio, playlist e jingle.
-- Podcast programmati, ricorrenze e calendario.
-- Ingresso per le dirette, con precedenza sulla programmazione.
-- API pubbliche per calendario e Replay.
-- Ascolti, stato della radio, backup e ripristino.
+- Audio library, playlists and jingles.
+- Scheduled podcasts, recurring broadcasts and a calendar.
+- Live input with priority over scheduled content.
+- Public APIs for the calendar and Replay, the on-demand podcast catalogue.
+- Listener statistics, station status, backups and restore.
 
-L’interfaccia è attualmente **in italiano**. Il supporto multilingua è un possibile sviluppo futuro e non è ancora implementato. Il sito pubblico e il player per gli ascoltatori non sono inclusi: possono essere realizzati separatamente usando stream e API.
+The interface is currently **in Italian**. Multilingual support is a possible future development and is not implemented yet. A public website and listener-facing Replay player are not included; they can be built separately using the stream and APIs.
 
-## Per iniziare
+## Getting started
 
-Julie usa Docker Compose e si prepara per un server Debian senza interfaccia grafica. Prima di avviare gli script, seguire [Installazione](docs/installazione.md): sono richiesti Docker Engine, Compose e Python 3.
+**Linux is the recommended platform**, including headless servers. Julie runs Linux containers with Docker Compose. Read [Installation](docs/installation.md) before running the scripts: Docker Engine, Compose and Python 3 are required.
 
-La documentazione completa è in [docs](docs/README.md).
+See [docs](docs/README.md) for the full documentation.
 
-**Stato:** prima versione beta (`0.1.0-beta.1`). Il nucleo applicativo è stato verificato su ARM64 con PostgreSQL; il pacchetto di installazione va collaudato su un server pulito prima dell’uso continuativo. Le prove prolungate e di recupero dopo un’interruzione restano da completare.
+**Status:** first beta (`0.1.0-beta.1`). Validate the complete installation on the target system before continuous use. Extended operation and recovery after unexpected interruptions still need further testing.
 
-## Licenza
+## License
 
-Julie è distribuito con licenza **GNU GPL v3.0**. Il testo completo è nel file [LICENSE](LICENSE). Dipendenze e servizi esterni mantengono le rispettive licenze: [componenti](docs/componenti.md).
+Julie is released under the **GNU General Public License v3.0**. See [LICENSE](LICENSE). Third-party components retain their own licenses: [Components and credits](docs/components.md).

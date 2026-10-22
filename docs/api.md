@@ -1,31 +1,31 @@
-# API pubbliche
+# Public APIs
 
-Julie fornisce le API e lo stream; il sito degli ascoltatori e l’interfaccia Replay si realizzano separatamente. Non usare le API interne della Libreria per un sito pubblico.
+Julie supplies the APIs and audio stream. The listener-facing website and Replay interface are built separately. Do not use internal library APIs for a public website.
 
-## Calendario
+## Calendar
 
-`GET /api/v1/schedule/` espone soltanto gli appuntamenti resi pubblici. Parametri:
+`GET /api/v1/schedule/` exposes only appointments marked public.
 
-| Parametro | Significato |
+| Parameter | Meaning |
 | --- | --- |
-| `from`, `to` | Date ISO o istanti con fuso, intervallo massimo 366 giorni |
-| `page` | Pagina, da 1 |
-| `page_size` | Risultati per pagina, da 1 a 200 |
+| `from`, `to` | ISO dates or timezone-aware timestamps; maximum window 366 days |
+| `page` | Page number, starting at 1 |
+| `page_size` | Results per page, from 1 to 200 |
 
-La risposta contiene `timezone`, `from`, `to`, `count`, `page`, `pages` e `results`. Il fuso indicato è Europe/Rome. I dettagli di un appuntamento non pubblicano automaticamente l’audio del podcast.
+Responses contain `timezone`, `from`, `to`, `count`, `page`, `pages` and `results`. The reported timezone is Europe/Rome. Publishing an appointment does not automatically publish its podcast audio.
 
-`GET /calendar.ics` restituisce un calendario iCalendar. Un’applicazione può sottoscrivere l’URL per aggiornarsi periodicamente; scaricare e importare un file una sola volta non crea un abbonamento. La frequenza di aggiornamento dipende dall’applicazione calendario. Gli eventi mantengono UID stabili anche dopo una modifica o un annullamento. L’intervallo predefinito include 30 giorni passati e 336 futuri.
+`GET /calendar.ics` returns an iCalendar feed. A calendar application can subscribe to the URL and refresh periodically. Downloading and importing a file once does not create a subscription. Refresh frequency depends on the calendar application. Events retain stable UIDs after edits or cancellations. The default window covers the previous 30 days and the next 336 days.
 
 ## Replay
 
-- `GET /api/v1/podcasts/`: catalogo pubblico, `page` da 1 e `page_size` da 1 a 100.
-- `GET /api/v1/podcasts/UUID/`: scheda del podcast.
-- `GET /api/v1/podcasts/UUID/audio.mp3`: copia MP3 pubblica, con supporto Range.
+- `GET /api/v1/podcasts/`: public catalogue, `page` starting at 1 and `page_size` from 1 to 100.
+- `GET /api/v1/podcasts/UUID/`: podcast details.
+- `GET /api/v1/podcasts/UUID/audio.mp3`: public MP3 copy, supporting Range requests.
 
-Sono supportati HEAD e OPTIONS. Le risposte pubbliche usano `Cache-Control: no-store`; non conservarle in cache sul sito se deve essere possibile revocare l’accesso. Rendere privato o cestinare un podcast revoca le nuove richieste anche a un link MP3 conosciuto. Non può ritirare una copia già scaricata o i byte già ricevuti dal player.
+HEAD and OPTIONS are supported. Public responses use `Cache-Control: no-store`; do not cache them in the website if access must remain revocable. Making a podcast private or moving it to the trash revokes new requests, including requests to a previously known MP3 URL. This cannot retract downloaded copies or bytes already received by a player.
 
-Gli URL assoluti della scheda e dell’audio usano l’origine API configurata nell’installazione. Controllare CORS in Manutenzione → Configurazione se il sito è ospitato su un’altra origine. Il modello proxy pubblico espone solo API e calendario, senza accesso amministrativo.
+Absolute detail and audio URLs use the configured public API origin. If the website uses a different origin, check CORS under **Manutenzione → Configurazione**. The public proxy template exposes only public APIs and the calendar, not administration.
 
-## Diretta
+## Live stream
 
-Il mount predefinito è `/stream.mp3`, MP3 128 kbit/s. Il player del sito deve usare l’URL HTTPS pubblico quando la pagina è HTTPS. Non usare le credenziali Icecast o della diretta nel codice del sito.
+The default mount is `/stream.mp3`, MP3 at 128 kbit/s. An HTTPS website should use the public HTTPS stream URL. Never put Icecast or live-input credentials in public website code.

@@ -1,14 +1,14 @@
-# Backup e ripristino
+# Backup and restore
 
-## Creare una copia
+## Create a backup
 
-Manutenzione → Backup è riservata agli amministratori. Sono disponibili database, audio, configurazione e **backup completo**. Gli archivi sono preparati in background e scaricabili dal browser.
+**Manutenzione → Backup** is reserved for administrators. Available types are database, audio, configuration and **Backup completo** (full backup). Archives are prepared in the background and downloaded through the browser.
 
-Il backup completo coordina database e audio nello stesso salvataggio. Tre archivi separati, creati in momenti differenti, non sono necessariamente coerenti tra loro. Per un trasferimento o un ripristino usare il backup completo.
+A full backup coordinates database and audio in one snapshot. Three separate archives taken at different times are not necessarily consistent. Use a full backup for migration or restoration.
 
-I file includono dati riservati. Non sono cifrati: conservarli in un luogo protetto, anche fuori dal server. Il download normalmente scade dopo 24 ore; le copie necessarie a un reset o ripristino in corso vengono conservate più a lungo. Lo spazio di un backup temporaneo sullo stesso server non sostituisce una copia esterna.
+Archives contain private data and are not encrypted. Store them securely, including a copy outside the server. Downloads normally expire after 24 hours; copies needed by an active reset or restore are retained longer. A temporary copy on the same server is not a substitute for an external backup.
 
-Sono disponibili anche:
+Command-line alternatives:
 
 ```sh
 ./backup-database.sh
@@ -17,30 +17,30 @@ Sono disponibili anche:
 ./backup-full.sh
 ```
 
-Questi comandi usano gli stessi servizi del pannello. La creazione di un backup non riavvia la radio; le modifiche ai contenuti possono restare brevemente in pausa durante la fotografia dei dati. Una copia audio e un backup completo richiedono spazio libero sufficiente sul filesystem di destinazione.
+These commands use the same backup services as the dashboard. Creating a backup does not restart the station. Content changes may pause briefly while the snapshot is taken. Audio and full backups require enough free space on the destination filesystem.
 
-## Ripristinare
+## Restore
 
-Manutenzione → Ripristina backup accetta un **backup completo ZIP di Julie**:
+**Manutenzione → Ripristina backup** accepts a **Julie full-backup ZIP**:
 
-1. Caricare l’archivio e attendere la verifica.
-2. Controllare il riepilogo dei contenuti.
-3. Preparare e scaricare il backup di sicurezza della radio attuale.
-4. Confermare l’operazione con la frase richiesta.
-5. Attendere il completamento, verificare la Libreria e riattivare la radio dal pannello.
+1. Upload the archive and wait for validation.
+2. Review its contents summary.
+3. Prepare and download the current station’s safety backup.
+4. Confirm using the phrase shown on the page.
+5. Wait for completion, inspect the library and manually reactivate the station.
 
-Il ripristino sostituisce i contenuti della radio e interrompe la trasmissione. Conserva invece account, password, impostazioni del server e configurazione degli indirizzi dell’installazione di destinazione. Il codice applicativo non viene sostituito con quello contenuto nel backup. Per questo il ripristino dal pannello non è un aggiornamento o un ripristino dell’intero sistema operativo.
+Restoring replaces station content and interrupts transmission. It preserves the destination installation’s accounts, passwords, server settings and public address configuration. Application code is not replaced by code contained in the archive. Dashboard restore is therefore neither a software update nor a full operating-system recovery.
 
-I podcast in avvio o in onda nel salvataggio non vengono reinviati automaticamente. Sono mantenuti playlist, programmazione, metadati editoriali, disponibilità Replay e storico ascolti.
+Podcasts that were starting or playing in the saved state are not automatically resent. Playlists, schedules, editorial metadata, Replay availability and listener history are restored.
 
-Il caricamento ha un limite predefinito di 20 GiB, modificabile dal server con `JULIE_MAX_RESTORE_BYTES`. Esistono anche limiti di sicurezza sui componenti interni: database e SQL 512 MiB, configurazione decompressa 128 MiB, 100.000 file audio e due milioni di record. Una libreria oltre questi limiti richiede una procedura amministrativa dedicata, non tentativi ripetuti dal browser.
+The upload limit defaults to 20 GiB and can be changed with `JULIE_MAX_RESTORE_BYTES`. Internal safety limits also apply: database and SQL 512 MiB, decompressed configuration 128 MiB, 100,000 audio files and two million records. Larger installations need a dedicated administrative recovery procedure rather than repeated browser attempts.
 
-In caso di errore dopo la conferma, conservare i file e il backup di sicurezza e usare il recupero previsto dalla pagina. Non sbloccare manualmente i marker di manutenzione e non cancellare cartelle per forzare la ripartenza.
+If a confirmed restore fails, keep its files and safety backup and use the recovery action provided by the page. Do not manually remove maintenance markers or delete directories to force the station to resume.
 
-## Riparti da zero
+## Reset
 
-Manutenzione → Riparti da zero prepara prima una copia completa di sicurezza. Il reset richiede conferma esplicita e cancella contenuti, playlist, programmazione e storico ascolti, mantenendo account e configurazione dell’installazione. Al termine la radio resta ferma fino alla riattivazione manuale.
+**Manutenzione → Riparti da zero** first prepares a full safety backup. Reset requires explicit confirmation and clears content, playlists, schedules and listener history while retaining accounts and installation settings. The station remains stopped until manually reactivated.
 
-## Recupero del server
+## Recover the server
 
-Per reinstallare su un altro server: predisporre una nuova installazione, creare l’amministratore e importare il backup completo. Conservare separatamente credenziali e configurazione della rete, eventuale `.env.proxy`, certificati e configurazioni esterne al progetto. Il volume PostgreSQL è l’archivio operativo; non eliminarlo pensando che sia una cache.
+For migration to another server, prepare a fresh installation, create its administrator and import the full backup. Keep network credentials, `.env.proxy`, certificates and configuration outside the project in a separate server recovery plan. The PostgreSQL volume holds live data; it is not a disposable cache.

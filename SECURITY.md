@@ -1,7 +1,7 @@
-# Segnalazioni di sicurezza
+# Security reports
 
-Non pubblicare password, codici di installazione, backup o dati della radio nelle issue o nei log condivisi.
+Do not publish passwords, installation codes, backups or station data in issues or shared logs.
 
-Per una vulnerabilità usare la segnalazione privata di GitHub, se abilitata nella repository. In assenza di un canale privato, richiedere un contatto al manutentore senza divulgare dettagli sfruttabili in un’issue pubblica.
+For vulnerabilities, use GitHub private vulnerability reporting if enabled for the repository. If no private channel is available, ask the maintainer for a contact without posting exploitable details in a public issue.
 
-La prima beta non ha ancora una politica di supporto a lungo termine. Installare gli aggiornamenti solo dopo aver letto le note e preparato un backup.
+The first beta does not yet have a long-term support policy. Read release notes and prepare a backup before installing updates.

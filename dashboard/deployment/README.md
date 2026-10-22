@@ -1,7 +1,7 @@
-# Modello HTTPS
+# HTTPS template
 
-I file di questa cartella sono descritti in [Configurazione](../../docs/configurazione.md).
+These files are documented in [Configuration](../../docs/configuration.md).
 
-Il comando `./julie` carica compose.proxy.yaml dopo i file di base quando `.env` contiene `JULIE_PROXY_ENABLED=1`. env.proxy.example va copiato nella radice come `.env.proxy`. Non copiare o attivare questi esempi senza configurare DNS, host consentiti e rete del server.
+The `./julie` command loads compose.proxy.yaml after the base files when `.env` contains `JULIE_PROXY_ENABLED=1`. Copy env.proxy.example to the repository root as `.env.proxy`. Do not activate these examples before configuring DNS, allowed hosts and the server network.
 
-I nomi example.org sono segnaposto: nessun dominio è richiesto dalla piattaforma. Per usare lo stesso hostname per più funzioni occorre adattare i blocchi Caddy, non ripetere lo stesso hostname nei tre blocchi dell’esempio.
+The example.org hostnames are placeholders; Julie does not require a particular domain. To share one hostname between functions, adapt the Caddy site blocks instead of repeating the same hostname in all three example blocks.
