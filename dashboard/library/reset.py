@@ -19,6 +19,7 @@ from . import backups, engine
 from .backup_guard import data_gate, reset_requested
 from .models import (
     Asset,
+    AudioReprocessJob,
     BackupJob,
     Broadcast,
     BroadcastSeries,
@@ -218,6 +219,8 @@ def erase(job):
         clear_audio()
         with transaction.atomic():
             # PROTECT dependencies must be removed in this order.
+            AudioReprocessJob.objects.all().delete()
+            preferences = RadioSettings.objects.filter(pk=1).values("audio_target_lufs", "audio_ceiling_dbtp").first() or {}
             Broadcast.objects.all().delete()
             BroadcastSeries.objects.all().delete()
             RadioSettings.objects.all().delete()
@@ -225,7 +228,7 @@ def erase(job):
             Asset.objects.all().delete()
             ListeningSample.objects.all().delete()
             RadioSnapshot.objects.all().delete()
-            RadioSettings.objects.create(pk=1, jingle_enabled=False)
+            RadioSettings.objects.create(pk=1, jingle_enabled=False, **preferences)
             job.status = "completed"
             job.finished_at = timezone.now()
             job.message = (

@@ -484,3 +484,37 @@ if (uploadMetadata) {
   });
   poll();
 })();
+
+
+// Refresh only job progress, leaving any values typed into the preferences form intact.
+(() => {
+  let card = document.querySelector('[data-audio-reprocess-progress]');
+  if (!card) return;
+  let busy = false;
+  const refresh = async () => {
+    if (document.hidden || busy || !card.hasAttribute('data-audio-reprocess-progress')) return;
+    busy = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    try {
+      const response = await fetch(location.href, {credentials: 'same-origin', cache: 'no-store', signal: controller.signal});
+      if (!response.ok || response.redirected) throw new Error();
+      const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+      const updated = page.querySelector('[data-audio-reprocess-card]');
+      if (!updated) throw new Error();
+      card.replaceWith(updated);
+      card = updated;
+      ['data-audio-settings-save', 'data-audio-reprocess-confirm', 'data-audio-reprocess-button'].forEach(attribute => {
+        const current = document.querySelector(`[${attribute}]`);
+        const fresh = page.querySelector(`[${attribute}]`);
+        if (current && fresh) current.disabled = fresh.disabled;
+      });
+    } catch (_) {
+      card.querySelector('[data-audio-reprocess-message]').textContent = 'Avanzamento non aggiornato. Nuovo controllo tra pochi secondi.';
+    } finally {
+      clearTimeout(timeout);
+      busy = false;
+    }
+  };
+  setInterval(refresh, 5000);
+})();

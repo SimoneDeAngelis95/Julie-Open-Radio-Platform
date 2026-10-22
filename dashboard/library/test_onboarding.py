@@ -29,6 +29,8 @@ class OnboardingTests(TestCase):
             "password": "Una-radio-scuola-2026!",
             "password_repeat": "Una-radio-scuola-2026!",
             "start": "empty",
+            "audio_target_lufs": -16,
+            "audio_ceiling_dbtp": -1.5,
         }
         values.update(changes)
         return values

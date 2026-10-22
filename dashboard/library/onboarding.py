@@ -16,7 +16,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
-from .models import Installation
+from .audio_settings import AudioPreferencesForm
+from .models import Installation, RadioSettings
 from .site_config import PublicAddressesForm, station
 from .storage import data_path
 
@@ -51,7 +52,7 @@ def prepare():
         return path
 
 
-class SetupForm(PublicAddressesForm):
+class SetupForm(PublicAddressesForm, AudioPreferencesForm):
     field_order: ClassVar = [
         "code",
         "radio_name",
@@ -59,6 +60,8 @@ class SetupForm(PublicAddressesForm):
         "password",
         "password_repeat",
         "start",
+        "audio_target_lufs",
+        "audio_ceiling_dbtp",
         "stream_url",
         "api_url",
         "website_url",
@@ -127,6 +130,13 @@ def setup(request):
                 )
                 for field in PublicAddressesForm.Meta.fields:
                     setattr(state, field, form.cleaned_data[field])
+                RadioSettings.objects.update_or_create(
+                    pk=1,
+                    defaults={
+                        name: form.cleaned_data[name]
+                        for name in ("audio_target_lufs", "audio_ceiling_dbtp")
+                    },
+                )
                 state.completed_at = timezone.now()
                 state.setup_digest = ""
                 state.save()

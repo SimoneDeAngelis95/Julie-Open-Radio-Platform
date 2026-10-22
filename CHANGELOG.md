@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Editable audio normalization preferences in initial setup and Configuration, with an explicitly confirmed background library reprocessing queue that preserves available audio and Replay versions.
+
 - Show the existing installation code and panel address at the end of first-run installation.
 
 - Drag-and-drop audio selection and automatic upload batches, preserving per-file metadata and playlist choices.

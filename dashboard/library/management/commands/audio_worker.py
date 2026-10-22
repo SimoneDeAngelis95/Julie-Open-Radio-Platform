@@ -4,7 +4,7 @@ import time
 from django.core.management.base import BaseCommand
 from django.db import close_old_connections
 
-from library import publication
+from library import publication, reprocessing
 from library.backup_guard import backup_requested, data_gate
 from library.playout import safe_publish
 from library.removal import recover_removals
@@ -27,9 +27,13 @@ class Command(BaseCommand):
                     recover_removals()
                     recover_interrupted()
                     publication.recovery()
+                    reprocessing.recover()
+                    reprocessing.cleanup_previous()
                     processed = publication.run_one()
                     if not processed:
                         processed = run_one()
+                    if not processed:
+                        processed = reprocessing.run_one()
                     safe_publish()
             if options["once"]:
                 return

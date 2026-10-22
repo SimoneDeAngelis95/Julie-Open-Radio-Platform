@@ -158,6 +158,8 @@ class SiteConfigurationTests(TestCase):
             username="nuovaradio",
             password="Una-radio-scuola-2026!",
             password_repeat="Una-radio-scuola-2026!",
+            audio_target_lufs=-16,
+            audio_ceiling_dbtp=-1.5,
             start="empty",
         )
         self.assertEqual(self.client.post("/setup/", values).status_code, 302)

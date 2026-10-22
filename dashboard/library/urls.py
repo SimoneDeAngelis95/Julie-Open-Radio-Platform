@@ -1,9 +1,10 @@
 from django.urls import path
 
-from . import site_config, system_views, restore_views, reset_views, backup_views, podcast_views, public_api, schedule_api, studio_views, views
+from . import audio_settings, site_config, system_views, restore_views, reset_views, backup_views, podcast_views, public_api, schedule_api, studio_views, views
 
 app_name = "library"
 urlpatterns = [
+    path("maintenance/audio/", audio_settings.index, name="audio_settings"),
     path("maintenance/configuration/", site_config.index, name="configuration"),
     path("maintenance/status/host/", system_views.host_status, name="host_status"),
     path("maintenance/status/", system_views.index, name="system_status"),

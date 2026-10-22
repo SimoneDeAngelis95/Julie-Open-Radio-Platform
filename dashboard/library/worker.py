@@ -4,11 +4,13 @@ import fcntl
 import logging
 import os
 import tempfile
-from django.conf import settings
+
 from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
+
 from . import audio
+from .audio_settings import effective
 from .models import Asset, RadioSettings
 from .storage import data_path
 
@@ -91,11 +93,12 @@ def run_one():
         workspace_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=workspace_root) as temporary:
             workspace = data_path(temporary)
+            target, ceiling = effective()
             result = audio.prepare(
                 data_path(asset.original_path),
                 workspace,
-                settings.NORMALIZE_TARGET_LUFS,
-                settings.NORMALIZE_CEILING_DBTP,
+                target,
+                ceiling,
             )
             # Lock only while merging current editorial values and publishing.
             # Metadata edits made during conversion always win over source tags.

@@ -36,7 +36,7 @@ The installer creates secrets, directories and the Icecast configuration, builds
 
 1. Open `http://SERVER-ADDRESS:8010`.
 2. Enter the installation code displayed at the end of the installer on the setup page.
-3. Create the administrator, name the station and choose an empty library or a full backup import.
+3. Create the administrator, name the station, choose the audio loudness and peak limits, and select an empty library or a full backup import. The proposed audio values are −16 LUFS and −1.5 dBTP; they can be changed later in Configuration. A backup import restores the audio preferences stored in that backup.
 
 The installer displays the code only while initial setup is still open. Running it again after an account exists does not display a code or reopen setup. To display a valid existing code again without reinstalling, run `./julie exec -T dashboard python manage.py show_setup_code`.
 

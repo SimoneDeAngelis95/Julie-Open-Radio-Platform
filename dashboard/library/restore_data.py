@@ -22,6 +22,7 @@ from django.utils import timezone
 
 from .models import (
     Asset,
+    AudioReprocessJob,
     Broadcast,
     BroadcastSeries,
     ListeningSample,
@@ -343,6 +344,7 @@ def validate_copy(sql, destination, audio_files):
 
 
 def clear_content():
+    AudioReprocessJob.objects.all().delete()
     Broadcast.objects.all().delete()
     BroadcastSeries.objects.all().delete()
     RadioSettings.objects.all().delete()

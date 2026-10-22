@@ -2,6 +2,7 @@
 
 import uuid
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -104,6 +105,14 @@ class RadioSettings(models.Model):
         on_delete=models.SET_NULL,
         related_name="selected_by_station",
     )
+    audio_target_lufs = models.FloatField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(-30), MaxValueValidator(-10)],
+    )
+    audio_ceiling_dbtp = models.FloatField(
+        null=True, blank=True, validators=[MinValueValidator(-6), MaxValueValidator(-1)]
+    )
     jingle_enabled = models.BooleanField(default=True)
     jingle_every = models.PositiveSmallIntegerField(default=3)
     current_jingle = models.ForeignKey(
@@ -123,6 +132,16 @@ class RadioSettings(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(
+                condition=models.Q(audio_target_lufs__isnull=True)
+                | models.Q(audio_target_lufs__gte=-30, audio_target_lufs__lte=-10),
+                name="valid_audio_target",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(audio_ceiling_dbtp__isnull=True)
+                | models.Q(audio_ceiling_dbtp__gte=-6, audio_ceiling_dbtp__lte=-1),
+                name="valid_audio_ceiling",
+            ),
             models.CheckConstraint(
                 condition=models.Q(id=1), name="single_station_settings"
             ),
@@ -387,3 +406,55 @@ class Installation(models.Model):
     public_origins = models.TextField(default="*", blank=True, max_length=4000)
     setup_digest = models.CharField(max_length=64, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+
+
+class AudioReprocessJob(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    status = models.CharField(
+        max_length=12,
+        default="active",
+        choices=[("active", "In corso"), ("completed", "Completata")],
+    )
+    target_lufs = models.FloatField()
+    ceiling_dbtp = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(null=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["status"],
+                condition=models.Q(status="active"),
+                name="one_audio_reprocess_job",
+            )
+        ]
+
+
+class AudioReprocessItem(models.Model):
+    job = models.ForeignKey(
+        AudioReprocessJob, on_delete=models.CASCADE, related_name="items"
+    )
+    asset = models.ForeignKey(Asset, on_delete=models.SET_NULL, null=True)
+    title = models.CharField(max_length=240)
+    status = models.CharField(
+        max_length=12,
+        default="pending",
+        choices=[
+            ("pending", "In attesa"),
+            ("working", "In elaborazione"),
+            ("done", "Completato"),
+            ("error", "Errore"),
+            ("skipped", "Escluso"),
+        ],
+    )
+    error = models.CharField(max_length=250, blank=True)
+    previous_paths = models.JSONField(default=list)
+    cleaned = models.BooleanField(default=False)
+    finished_at = models.DateTimeField(null=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["job", "asset"], name="one_audio_reprocess_item"
+            )
+        ]
