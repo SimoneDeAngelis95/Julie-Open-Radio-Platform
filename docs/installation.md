@@ -13,7 +13,14 @@ Install Docker Engine and the Compose plugin using the [official instructions fo
 
 ## Get the project
 
-Clone the GitHub repository and open the resulting directory. For a published release, check out the tag listed on its release page. The repository URL will be added after publication.
+Clone the repository and open the resulting directory:
+
+```sh
+git clone https://github.com/SimoneDeAngelis95/Julie-Open-Radio-Platform.git
+cd Julie-Open-Radio-Platform
+```
+
+For a published release, check out the tag listed on its release page.
 
 ## First local startup
 
