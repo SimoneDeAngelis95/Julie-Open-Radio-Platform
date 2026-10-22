@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}{{ asset.title }} · Podcast{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'library:podcasts' %}">← Tutti i podcast</a>
+<div class="page-heading"><div><h1>{{ asset.title }}</h1><p class="intro">{{ asset.publication_label }}</p></div></div>
+<div class="detail-layout"><form method="post" class="card">{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% endfor %}<p class="help-text">Per scegliere la disponibilità nel Replay usa la tendina nella pagina Podcast.</p><button class="button primary">Salva modifiche</button></form>
+<aside class="card"><h2>Disponibilità online</h2><p>{{ asset.publication_label }}</p>{% if asset.first_broadcast_at %}<p>Prima trasmissione completata: {{ asset.first_broadcast_at|date:'d/m/Y H:i' }}</p>{% endif %}
+{% if asset.public_available %}<label for="public-audio-link">Link MP3 pubblico</label><input id="public-audio-link" type="url" value="{{ asset.public_url }}" readonly><button type="button" class="button secondary" data-copy-link>Copia link MP3</button><p class="help-text" data-copy-feedback role="status"></p><audio controls preload="none" src="{{ asset.public_url }}"></audio><form method="post" action="{% url 'library:podcast_private' asset.id %}">{% csrf_token %}<button class="button secondary">Rendi privato</button></form>{% endif %}
+{% if asset.needs_replay_retry %}<p class="notice error">{{ asset.replay_error|default:"Copia MP3 non disponibile. Puoi prepararne una nuova." }}</p><form method="post" action="{% url 'library:podcast_retry' asset.id %}">{% csrf_token %}<button class="button secondary">Riprova MP3</button></form>{% endif %}
+<div class="soft-note">Julie fornisce API e audio; la pagina Replay viene realizzata dall’utente nel proprio sito.</div><a class="button secondary" href="{% url 'library:detail' asset.id %}">Scheda in Libreria</a>
+</aside></div>
+{% endblock %}

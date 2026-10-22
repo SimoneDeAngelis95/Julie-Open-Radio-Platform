@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}In onda{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>In onda<span class="heading-dot">.</span></h1><p class="intro">Uno sguardo alla regia e a chi è collegato.</p></div><a class="button secondary" href="{% url 'library:listening' %}">Storico ascolti ↗</a></div>
+<div data-on-air data-status-url="{% url 'library:studio_status' %}">
+  <div class="studio-grid">
+    <section class="card studio-current"><p class="eyebrow" data-radio-kind>{{ status.kind }}</p><h2 data-radio-title>{{ status.title|default:'Titolo non disponibile' }}</h2><p class="intro" data-radio-artist>{{ status.artist }}</p><p class="help-text" data-radio-health>{% if status.stream_online == True %}Stream online{% elif status.stream_online == False %}Stream non disponibile{% else %}Stato dello stream non disponibile{% endif %}</p><p class="help-text">Titolo e autore dipendono dai metadati inviati dalla sorgente.</p><p class="help-text" data-engine-health>{% if status.engine_online %}Regia collegata{% else %}Stato della regia non disponibile{% endif %}</p></section>
+    <section class="card"><p class="eyebrow">CONNESSIONI ATTUALI</p><p class="studio-number" data-listener-count>{{ status.listeners|default_if_none:'—' }}</p><p class="help-text">Player collegati allo stream, compreso questo se lo avvii. Non sono persone uniche.</p><p class="help-text" data-radio-updated>Aggiornamento automatico ogni 15 secondi.</p></section>
+  </div>
+  <div class="studio-grid">
+    <section class="card"><h2>Ascolta la radio</h2><audio class="detail-audio" controls preload="none" src="{{ status.stream_url }}"></audio><p class="help-text">Il player può avere qualche secondo di ritardo rispetto alla regia.</p><label for="public-audio-link">Link dello stream per il tuo player</label><input id="public-audio-link" value="{{ status.stream_url }}" readonly><button class="button secondary" type="button" data-copy-link>Copia link</button><p class="help-text" data-copy-feedback role="status"></p></section>
+    <section class="card"><h2>La programmazione</h2><p class="eyebrow">SELEZIONE MUSICALE</p><p data-radio-playlist>{{ status.playlist }}</p><a href="{% url 'library:playlists' %}">Scegli playlist →</a><p class="eyebrow studio-next">PROSSIMO PODCAST</p><p data-radio-upcoming>{% if status.upcoming %}{{ status.upcoming.title }}{% else %}Nessuna trasmissione programmata.{% endif %}</p><p class="help-text" data-radio-upcoming-time></p><a href="{% url 'library:calendar' %}">Apri palinsesto →</a></section>
+  </div>
+</div>
+{% endblock %}

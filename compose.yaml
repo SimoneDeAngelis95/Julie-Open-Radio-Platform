@@ -1,0 +1,25 @@
+name: ${COMPOSE_PROJECT_NAME:-julie}
+services:
+  icecast:
+    build: ./icecast
+    restart: unless-stopped
+    user: "${JULIE_UID:-1000}:${JULIE_GID:-1000}"
+    ports:
+      - "${JULIE_BIND_ADDRESS:-127.0.0.1}:${JULIE_STREAM_PORT:-8000}:8000"
+    volumes:
+      - ./config/icecast.xml:/etc/icecast2/icecast.xml:ro
+  liquidsoap:
+    image: savonet/liquidsoap:v2.4.6
+    restart: unless-stopped
+    user: "${JULIE_UID:-1000}:${JULIE_GID:-1000}"
+    depends_on:
+      - icecast
+    environment:
+      ICECAST_SOURCE_PASSWORD: ${ICECAST_SOURCE_PASSWORD:?Run install.sh first}
+      JULIE_LIVE_PASSWORD: ${JULIE_LIVE_PASSWORD:?Run install.sh first}
+    ports:
+      - "${JULIE_BIND_ADDRESS:-127.0.0.1}:${JULIE_LIVE_PORT:-8001}:8001"
+    volumes:
+      - ./config/radio.liq:/app/radio.liq:ro
+      - ./audio:/audio:ro
+    command: ["/app/radio.liq"]

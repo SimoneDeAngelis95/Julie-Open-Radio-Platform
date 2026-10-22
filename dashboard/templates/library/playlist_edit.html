@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{% if playlist.pk %}{{ playlist.name }}{% else %}Nuova playlist{% endif %}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'library:playlists' %}">← Torna alle playlist</a>
+<div class="page-heading"><div><h1>{% if playlist.pk %}{{ playlist.name }}{% else %}Nuova playlist{% endif %}</h1><p class="intro">I brani vengono riprodotti in ordine casuale, sempre rispettando il loro stato.</p></div></div>
+<form class="card" method="post">{% csrf_token %}{{ form.non_field_errors }}
+<label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>{{ form.name }}{{ form.name.errors }}
+<label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>{{ form.description }}{{ form.description.errors }}
+<h2>Brani della playlist</h2><p class="help-text">Puoi aggiungere anche brani in preparazione o esclusi: entreranno in rotazione solo quando saranno pronti e attivi. I file nel cestino non sono selezionabili.</p>
+<input type="search" placeholder="Filtra i brani…" aria-label="Filtra i brani della playlist" data-playlist-search>
+<div class="playlist-picker">{% for option in form.assets %}<div data-playlist-option>{{ option }}</div>{% empty %}<p>Non ci sono brani musicali disponibili. Caricali prima nella Libreria.</p>{% endfor %}</div>{{ form.assets.errors }}
+<button class="button primary">Salva playlist ↗</button>
+{% if config.selected_playlist_id == playlist.id and playlist.pk %}<p class="help-text">Questa playlist è in uso: le modifiche aggiornano le prossime scelte della radio.</p>{% endif %}
+</form>
+{% endblock %}

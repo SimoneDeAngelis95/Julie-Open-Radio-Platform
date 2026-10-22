@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Riparti da zero{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Riparti da zero<span class="heading-dot">.</span></h1><p class="intro">Svuota i contenuti di Julie e prepara una nuova radio.</p></div></div>
+{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+<section class="card reset-panel">
+<h2>Cosa verrà cancellato</h2>
+<ul><li>Tutti gli audio, originali e copie preparate, compreso il Cestino ({{ counts.audio }} file in libreria).</li><li>Playlist ({{ counts.playlists }}), jingle e selezione musicale.</li><li>Palinsesto, ricorrenze e trasmissioni passate ({{ counts.broadcasts }} appuntamenti).</li><li>Statistiche di ascolto e stato della regia.</li></ul>
+<p><strong>Conserviamo account, accesso al pannello, configurazione tecnica e backup.</strong> La cancellazione non è annullabile dal pannello: per recuperare i contenuti serve un ripristino dal backup.</p>
+<p>Prima prepariamo un backup completo. Fino alla conferma la radio continua a trasmettere; caricamenti, modifiche, palinsesto e raccolta degli ascolti restano in pausa per mantenere il backup allineato. Puoi annullare prima della conferma.</p>
+{% if active %}
+<div class="soft-note" role="status">{{ job.message }}</div>
+{% if job.status == 'preparing' %}<p>La preparazione continua anche se lasci la pagina. Aggiornala per controllare quando il backup è pronto.</p>{% endif %}
+{% if job.status == 'ready' or job.status == 'failed' %}
+<p><a class="button primary" href="{% url 'library:backup_download' job.backup_id %}">Scarica il backup completo ↧</a></p>
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="confirm"><input type="hidden" name="job" value="{{ job.id }}">
+<label class="checkbox-label"><input type="checkbox" name="downloaded" required> Ho scaricato e conservato il backup completo.</label>
+<p><strong>Confermando, interrompi anche eventuali dirette. La radio resterà ferma fino alla riattivazione manuale.</strong></p>
+<label for="reset-confirmation">Scrivi RESET JULIE per confermare</label><input id="reset-confirmation" name="confirmation" autocomplete="off" required pattern="RESET JULIE">
+<button class="button reset-danger">{% if job.status == 'failed' %}Riprova il reset confermato{% else %}Cancella tutto e riparti da zero{% endif %}</button></form>
+{% endif %}
+{% if job.status == 'queued' or job.status == 'running' %}<p>Reset confermato. Attendi il completamento e aggiorna la pagina. Se il servizio viene riavviato riprenderà la stessa operazione.</p>{% endif %}
+{% if job.status == 'preparing' or job.status == 'ready' %}<form method="post" class="studio-next">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="job" value="{{ job.id }}"><button class="button secondary">Annulla il reset</button></form>{% endif %}
+{% else %}
+{% if job %}<div class="soft-note">{{ job.message }}</div>{% endif %}
+{% if stopped %}<p>La trasmissione è ferma. Puoi caricare i nuovi contenuti prima di riattivarla.</p><form method="post">{% csrf_token %}<input type="hidden" name="action" value="resume"><button class="button primary">Riattiva la radio</button></form>{% endif %}
+<form method="post" class="studio-next">{% csrf_token %}<input type="hidden" name="action" value="prepare"><button class="button secondary">Prepara il backup prima del reset</button></form>
+{% endif %}
+</section>
+{% endblock %}

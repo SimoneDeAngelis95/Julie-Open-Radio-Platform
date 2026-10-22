@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Ascolti{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Ascolti<span class="heading-dot">.</span></h1><p class="intro">Connessioni allo stream nel tempo. Una persona con due player può contare due volte.</p></div><a class="button secondary" href="{% url 'library:on_air' %}">In onda ↗</a></div>
+<form method="get" class="filters"><label for="listening-days">Periodo</label><select id="listening-days" name="period">{% for value, label in periods %}<option value="{{ value }}" {% if selected_period == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="button secondary">Mostra</button></form>
+<div class="studio-metrics">
+<section class="card"><p class="eyebrow">CONNESSIONI ADESSO</p><p class="studio-number">{{ current.listeners|default_if_none:'—' }}</p><p class="help-text">Apri In onda per il contatore aggiornato.</p></section>
+<section class="card"><p class="eyebrow">PICCO RILEVATO NEL PERIODO</p><p class="studio-number">{{ summary.peak|default_if_none:'—' }}</p><p class="help-text">Massimo delle connessioni osservate.</p></section>
+<section class="card"><p class="eyebrow">MEDIA DELLE CONNESSIONI</p><p class="studio-number">{% if summary.average != None %}{{ summary.average|floatformat:1 }}{% else %}—{% endif %}</p><p class="help-text">Media delle connessioni nel periodo.</p></section>
+</div>
+<section class="card"><h2>Andamento {% if chart_monthly %}mensile{% else %}giornaliero{% endif %}</h2><p class="help-text">Altezza delle barre: picco rilevato {% if chart_monthly %}del mese{% else %}del giorno{% endif %}. Grigio: nessun dato disponibile. I valori esatti sono nella tabella.</p>
+{% if first %}<div class="audience-chart" role="img" aria-label="Picchi delle connessioni nell’intero periodo selezionato">{% for row in chart_rows %}<div class="audience-column" title="{% if chart_monthly %}{{ row.day|date:'m/Y' }}{% else %}{{ row.day|date:'d/m/Y' }}{% endif %}: {{ row.peak|default_if_none:'dato non disponibile' }}"><div class="audience-bar {% if row.peak == None %}unknown{% endif %}" style="height:{{ row.height|stringformat:'s' }}%"></div></div>{% endfor %}</div>{% else %}<p>Lo storico inizierà con il primo rilevamento. Non vengono ricostruiti ascolti passati.</p>{% endif %}
+</section>
+<section class="library-panel studio-next"><div class="table-scroll"><table><thead><tr><th>GIORNO</th><th>PICCO RILEVATO</th><th>MEDIA</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ row.day|date:'d/m/Y' }}</td><td>{{ row.peak|default_if_none:'—' }}</td><td>{% if row.average != None %}{{ row.average|floatformat:1 }}{% else %}—{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+<div class="panel-footer"><span>Pagina {{ page.number }} di {{ page.paginator.num_pages }} · {{ page.start_index }}–{{ page.end_index }} di {{ page.paginator.count }} giorni</span><nav aria-label="Pagine dello storico">{% if previous_url %}<a class="button secondary small" href="{{ previous_url }}">← Precedenti</a>{% endif %} {% if next_url %}<a class="button secondary small" href="{{ next_url }}">Successivi →</a>{% endif %}</nav></div></section>
+<p class="help-text">Grafico, picco e media si riferiscono all’intero periodo scelto; le frecce cambiano solo i giorni della tabella.</p>
+<p class="help-text">{% if first %}Raccolta iniziata il {{ first|date:'d/m/Y H:i' }}. {% endif %}Un rilevamento al minuto; gli intervalli senza dati non vengono stimati. Picchi più brevi possono sfuggire al campionamento. Nessun IP o identificativo degli ascoltatori viene registrato. Il conteggio riguarda lo stream live, non gli ascolti dei file Replay.</p>
+{% endblock %}

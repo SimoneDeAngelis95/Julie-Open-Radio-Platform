@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}{% if editing or editing_series %}Modifica la trasmissione{% else %}Programma un podcast{% endif %}{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>{% if editing or editing_series %}Modifica la trasmissione{% else %}Programma un podcast{% endif %}</h1><p class="intro">Una volta oppure ogni settimana. Orario di Roma.</p></div></div>
+<section class="card"><form method="post" data-broadcast-form>{% csrf_token %}
+{{ form.non_field_errors }}
+{% if editing or editing_series %}<p class="help-text">{% if editing_series %}Le modifiche riguardano le prossime puntate della serie. Le puntate già avviate e le eccezioni modificate singolarmente restano conservate.{% else %}Modifica solo questo appuntamento. Le altre puntate della serie mantengono i propri orari.{% endif %}</p>{% else %}<p class="help-text">Puoi scegliere un podcast pronto oppure ancora in preparazione. Se manca un episodio, caricalo prima nella <a href="{% url 'library:upload' %}">Libreria</a>.</p>{% endif %}
+{% for field in form %}<div class="form-field" {% if field.name == "weekdays" or field.name == "until" %}data-weekly-field{% endif %}>{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+<p class="help-text">Per le serie serve un podcast pronto. Senza data di fine vengono preparati i prossimi 12 mesi e aggiunti automaticamente nel tempo. Al cambio dell’ora gli orari inesistenti vengono saltati e quelli ripetuti vengono trasmessi una sola volta. La visibilità nel calendario pubblico non abilita il Replay.</p>
+<p class="help-text">Lo stesso podcast può avere più appuntamenti, senza duplicare il file. Se la durata non è ancora nota, verifica le sovrapposizioni dopo la preparazione.</p>
+<p class="subtle">La musica sfuma per tre secondi. La diretta ha sempre la precedenza: un podcast saltato o interrotto non riparte automaticamente.</p>
+<div class="form-actions"><button class="button primary" type="submit">{% if editing or editing_series %}Salva giorno e ora{% else %}Programma podcast{% endif %}</button><a class="button" href="{% url 'library:calendar' %}">Torna al palinsesto</a></div>
+</form></section>
+{% endblock %}

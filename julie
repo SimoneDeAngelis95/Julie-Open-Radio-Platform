@@ -1,0 +1,17 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-only
+set -eu
+cd "$(dirname "$0")"
+if [ ! -f .env ] || [ ! -f .env.dashboard ]; then
+    printf '%s\n' 'Installazione non configurata: esegui ./install.sh.' >&2
+    exit 1
+fi
+if grep -q '^JULIE_PROXY_ENABLED=1$' .env; then
+    set -- -f compose.yaml -f compose.dashboard.yaml -f dashboard/deployment/compose.proxy.yaml "$@"
+else
+    set -- -f compose.yaml -f compose.dashboard.yaml "$@"
+fi
+if docker info >/dev/null 2>&1; then
+    exec docker compose "$@"
+fi
+exec sudo docker compose "$@"

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Ripristina backup{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Ripristina backup<span class="heading-dot">.</span></h1><p class="intro">Recupera i contenuti della radio da un backup completo di Julie.</p></div></div>
+{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+<section class="card reset-panel">
+<p>Ripristiniamo <strong>audio, descrizioni, playlist, jingle, palinsesto e statistiche</strong> dello stesso salvataggio. I contenuti attuali verranno sostituiti.</p>
+<p><strong>Account, password e configurazione tecnica di questo server restano invariati.</strong> Le impostazioni del server di origine restano conservate nel backup, senza cambiare quelle di destinazione.</p>
+{% if active %}
+<div class="soft-note" role="status">{{ job.message }}</div>
+{% if job.status == 'uploading' or job.status == 'checking' %}<p>La verifica procede in background. Aggiorna la pagina per controllare l’esito. La radio continua a funzionare.</p>{% else %}
+<h2>Contenuto verificato</h2><ul><li>{{ asset_count }} schede audio · {{ job.summary.files }} file originali e preparati.</li><li>{{ playlist_count }} playlist.</li><li>{{ broadcast_count }} appuntamenti e {{ sample_count }} rilevamenti di ascolto.</li></ul>
+<p class="help-text">Salvataggio: {{ backup_date|date:"d/m/Y H:i" }} · ID {{ job.summary.backup_id }}</p>
+{% endif %}
+{% if job.status == 'ready' %}<p>Prima di proseguire prepariamo un backup completo della radio attuale. Durante questa fase caricamenti, modifiche, palinsesto e raccolta degli ascolti saranno in pausa. La trasmissione corrente continua fino alla conferma finale.</p><form method="post">{% csrf_token %}<input type="hidden" name="job" value="{{ job.id }}"><input type="hidden" name="action" value="protect"><button class="button primary">Prepara il backup della radio attuale</button></form>{% endif %}
+{% if job.status == 'preparing' %}<p>Attendi il backup di sicurezza e aggiorna la pagina. Puoi ancora annullare.</p>{% endif %}
+{% if job.status == 'protected' or job.status == 'failed' %}
+<p><a class="button primary" href="{% url 'library:backup_download' job.safety_backup_id %}">Scarica il backup della radio attuale ↧</a></p>
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="confirm"><input type="hidden" name="job" value="{{ job.id }}">
+<label class="checkbox-label"><input type="checkbox" name="downloaded" required> Ho scaricato e conservato il backup della radio attuale.</label>
+<p><strong>Confermando interrompi la trasmissione, comprese le dirette, e sostituisci i contenuti attuali. La radio resterà ferma per permetterti di controllare il risultato.</strong> Le trasmissioni passate non verranno recuperate automaticamente.</p>
+<label for="restore-confirmation">Scrivi RIPRISTINA JULIE per confermare</label><input id="restore-confirmation" name="confirmation" required pattern="RIPRISTINA JULIE" autocomplete="off"><button class="button reset-danger">{% if job.status == 'failed' %}Riprova lo stesso ripristino{% else %}Sostituisci i contenuti e ripristina{% endif %}</button></form>
+{% endif %}
+{% if job.status == 'queued' or job.status == 'running' or job.status == 'applied' %}<p>Ripristino confermato. Il servizio continua anche se lasci questa pagina. Aggiornala per controllare il completamento.</p>{% endif %}
+{% if job.status == 'ready' or job.status == 'preparing' or job.status == 'protected' %}<form method="post" class="studio-next">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="job" value="{{ job.id }}"><button class="button secondary">Annulla il ripristino</button></form>{% endif %}
+{% else %}
+{% if job %}<div class="soft-note">{{ job.message }}</div>{% endif %}
+{% if job.status == 'completed' %}<p><a class="button secondary" href="{% url 'library:index' %}">Controlla la libreria →</a></p>{% if radio_stopped %}<p>La trasmissione è ferma. Controlla i contenuti e riattivala quando vuoi.</p><form method="post">{% csrf_token %}<input type="hidden" name="action" value="resume"><button class="button primary">Riattiva la radio</button></form>{% endif %}{% endif %}
+<form method="post" enctype="multipart/form-data" class="restore-upload">{% csrf_token %}<input type="hidden" name="action" value="upload"><label for="{{ form.archive.id_for_label }}">{{ form.archive.label }}</label>{{ form.archive }}<p class="help-text">Usa il file ZIP generato da Backup completo. Gli archivi separati di database, audio o configurazione non vengono combinati automaticamente. Massimo {{ max_restore_gb|floatformat:0 }} GB. Serve spazio libero per gli audio estratti e per il backup della radio attuale.</p><button class="button primary studio-next">Carica e verifica il backup</button></form>
+{% endif %}
+<p class="help-text">Una richiesta non confermata scade dopo 24 ore. Il ripristino conserva un backup della radio precedente almeno per 24 ore dopo il completamento: salva la copia sul tuo computer.</p>
+</section>
+{% endblock %}

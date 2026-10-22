@@ -1,0 +1,105 @@
+name: ${COMPOSE_PROJECT_NAME:-julie}
+services:
+  dashboard-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    env_file: .env.dashboard
+    volumes:
+      - julie_dashboard_db:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    shm_size: 128m
+  dashboard-init:
+    image: julie-dashboard:local
+    user: "${JULIE_UID:-1000}:${JULIE_GID:-1000}"
+    env_file: .env.dashboard
+    command: [sh, -c, 'python manage.py migrate --noinput && python manage.py bootstrap_admin']
+    volumes:
+      - ./audio/library:/data
+    depends_on:
+      dashboard-db:
+        condition: service_healthy
+  dashboard:
+    image: julie-dashboard:local
+    user: "${JULIE_UID:-1000}:${JULIE_GID:-1000}"
+    build: ./dashboard
+    restart: unless-stopped
+    env_file: .env.dashboard
+    ports:
+      - "${JULIE_BIND_ADDRESS:-127.0.0.1}:${JULIE_DASHBOARD_PORT:-8010}:8000"
+    volumes:
+      - ./audio/library:/data
+      - ./backups/exports:/backups
+    depends_on:
+      dashboard-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, python, -c, 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health/", timeout=3)']
+      interval: 20s
+      timeout: 5s
+      retries: 5
+  dashboard-worker:
+    image: julie-dashboard:local
+    user: "${JULIE_UID:-1000}:${JULIE_GID:-1000}"
+    restart: unless-stopped
+    env_file: .env.dashboard
+    command: [python, manage.py, audio_worker]
+    cpus: 1.0
+    volumes:
+      - ./audio/library:/data
+    depends_on:
+      dashboard-init:
+        condition: service_completed_successfully
+  dashboard-scheduler:
+    image: julie-dashboard:local
+    user: "${JULIE_UID:-1000}:${JULIE_GID:-1000}"
+    restart: unless-stopped
+    env_file: .env.dashboard
+    command: [python, manage.py, radio_scheduler]
+    volumes:
+      - ./audio/library:/data
+    depends_on:
+      dashboard-init:
+        condition: service_completed_successfully
+  dashboard-listening:
+    image: julie-dashboard:local
+    user: "${JULIE_UID:-1000}:${JULIE_GID:-1000}"
+    restart: unless-stopped
+    env_file: .env.dashboard
+    command: [python, manage.py, listening_collector]
+    volumes:
+      - ./audio/library:/data
+    depends_on:
+      dashboard-init:
+        condition: service_completed_successfully
+  dashboard-backup:
+    image: julie-dashboard:local
+    user: "${JULIE_UID:-1000}:${JULIE_GID:-1000}"
+    restart: unless-stopped
+    env_file: .env.dashboard
+    command: [nice, -n, '10', python, manage.py, backup_worker]
+    environment:
+      JULIE_BACKUP_CODE_ROOT: /config-source/dashboard
+    cpus: 0.5
+    volumes:
+      - ./audio/library:/data
+      - ./backups/exports:/backups
+      - ./.env:/config-source/.env:ro
+      - ./.env.dashboard:/config-source/.env.dashboard:ro
+      - ./compose.yaml:/config-source/compose.yaml:ro
+      - ./compose.dashboard.yaml:/config-source/compose.dashboard.yaml:ro
+      - ./config:/config-source/config:ro
+      - ./icecast:/config-source/icecast:ro
+      - ./dashboard:/config-source/dashboard:ro
+      - ./backup-database.sh:/config-source/scripts/backup-database.sh:ro
+      - ./backup-audio.sh:/config-source/scripts/backup-audio.sh:ro
+      - ./backup-config.sh:/config-source/scripts/backup-config.sh:ro
+      - ./backup-full.sh:/config-source/scripts/backup-full.sh:ro
+    depends_on:
+      dashboard-init:
+        condition: service_completed_successfully
+volumes:
+  julie_dashboard_db:

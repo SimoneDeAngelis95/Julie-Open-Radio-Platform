@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Playlist{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Le tue playlist<span class="heading-dot">.</span></h1><p class="intro">Raccolte musicali, senza duplicare i file.</p></div><a class="button primary" href="{% url 'library:playlist_create' %}">＋ Crea playlist</a></div>
+<section class="card">
+<h2>Musica da mandare in onda</h2>
+<p>Selezione attiva: <strong>{{ config.selected_playlist.name|default:"Tutta la musica attiva" }}</strong></p>
+<form method="post">{% csrf_token %}
+{{ selection_form.non_field_errors }}
+<label for="{{ selection_form.selected_playlist.id_for_label }}">{{ selection_form.selected_playlist.label }}</label>
+<div class="replay-choice">{{ selection_form.selected_playlist }}<button class="button primary">Usa per la radio</button></div>
+{{ selection_form.selected_playlist.errors }}
+</form>
+<p class="help-text">{{ active_count }} brani pronti e attivi nella selezione corrente. La radio li sceglie casualmente. Il cambio vale dalle prossime selezioni, senza interrompere il brano corrente.</p>
+{% if not active_count %}<p class="notice error">Non ci sono brani pronti e attivi nella selezione corrente. Dirette e podcast mantengono la precedenza.</p>{% endif %}
+</section>
+<div class="playlist-grid">
+{% for playlist in playlists %}<article class="card">
+<h2><a href="{% url 'library:playlist_edit' playlist.id %}">{{ playlist.name }}</a></h2><p class="help-text">{{ playlist.description|default:"La tua raccolta musicale." }}</p>
+<p>{{ playlist.visible_count }} brani · {{ playlist.ready_count }} pronti e attivi</p>
+<div class="playlist-actions"><a class="button secondary" href="{% url 'library:playlist_edit' playlist.id %}">Modifica</a>
+{% if config.selected_playlist_id == playlist.id %}<span class="badge ready">Usata in radio</span>{% else %}<form method="post" action="{% url 'library:playlist_activate' playlist.id %}">{% csrf_token %}<button class="button primary">Usa in radio ↗</button></form>{% endif %}</div>
+{% if config.selected_playlist_id == playlist.id and not playlist.ready_count %}<p class="notice error">Questa raccolta non ha brani pronti e attivi. Aggiungili o scegli un’altra selezione.</p>{% endif %}
+</article>{% empty %}<section class="card empty-state"><h2>Una raccolta per ogni momento.</h2><p>Crea la tua prima playlist e aggiungi i brani dalla Libreria.</p><a class="button primary" href="{% url 'library:playlist_create' %}">Crea la prima playlist</a></section>{% endfor %}
+</div>
+{% endblock %}

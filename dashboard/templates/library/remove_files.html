@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Conferma eliminazione{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'library:trash' %}">← Torna al Cestino</a>
+<div class="page-heading"><div><h1>{% if emptying %}Svuota cestino{% else %}Elimina file audio{% endif %}</h1><p class="intro">Controlla gli elementi e scegli se conservare gli originali.</p></div></div>
+<section class="card"><h2>Contenuti selezionati: {{ assets|length }}</h2>
+<ul class="removal-selection">{% for asset in assets %}<li><strong>{{ asset.title }}</strong> · {{ asset.original_name }}{% if asset.copies_removed %} — Solo originale{% endif %}</li>{% empty %}<li>Nessun contenuto da eliminare.</li>{% endfor %}</ul>
+<p>Per impostazione predefinita elimini soltanto le copie elaborate. Gli originali e le schede restano nel Cestino: ripristinandoli, Julie prepara nuovamente l’audio.</p>
+<p>Se scegli di cancellare anche gli originali, i contenuti vengono rimossi definitivamente dal Cestino. Lo storico delle trasmissioni resta; gli appuntamenti ancora programmati vengono annullati.</p>
+<p class="soft-note">Gli audio in onda, in avvio o in elaborazione sono esclusi. Se non possiamo verificare la regia, non cancelliamo i file. Eventuali errori su disco vengono ritentati e mostrati nel Cestino.</p>
+{% if assets %}<form method="post">{% csrf_token %}{{ form.non_field_errors }}{{ form.selection }}
+<label class="schedule-toggle">{{ form.delete_original }} {{ form.delete_original.label }}</label>{{ form.delete_original.errors }}
+<label class="schedule-toggle">{{ form.confirm }} {{ form.confirm.label }}</label>{{ form.confirm.errors }}
+<button type="submit" class="button primary">Conferma eliminazione</button><a class="button secondary" href="{% url 'library:trash' %}">Annulla</a>
+</form>{% endif %}</section>
+{% endblock %}

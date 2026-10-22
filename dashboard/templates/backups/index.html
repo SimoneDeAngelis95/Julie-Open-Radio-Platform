@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Backup{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Backup<span class="heading-dot">.</span></h1><p class="intro">Prepara un archivio e scaricalo sul tuo computer.</p></div></div>
+<div data-backups data-version="{{ version }}" data-active="{% if active %}yes{% else %}no{% endif %}" data-status-url="{% url 'library:backup_status' %}">
+<section class="card">
+{% if active %}<h2>Backup in preparazione</h2><p role="status">{{ active.progress }}</p><p class="help-text">Puoi lasciare questa pagina. Il servizio continua a lavorare e la radio continua a trasmettere.</p>{% else %}
+<form method="post" data-backup-form>{% csrf_token %}{{ form.non_field_errors }}
+<label for="{{ form.kind.id_for_label }}">{{ form.kind.label }}</label>{{ form.kind }}{{ form.kind.errors }}
+<p class="help-text">Database: libreria, playlist, palinsesto e statistiche. Audio: originali e copie preparate, compresi quelli nel Cestino. Configurazione: impostazioni, credenziali e codice. Completo: tutti e tre nello stesso salvataggio coerente.</p>
+<p class="help-text">I backup contengono dati riservati e credenziali: conserva i file scaricati in un luogo sicuro.</p>
+<button class="button primary">Prepara backup</button></form>
+{% endif %}
+<p class="help-text">Durante la fotografia della libreria, caricamenti e modifiche attendono. Dopo la fotografia riprendono mentre si crea l’archivio. Dirette e riproduzione continuano. Un backup audio grande può richiedere tempo e spazio libero.</p>
+<div class="soft-note">Gli archivi sul server vengono eliminati automaticamente dopo 24 ore. La copia da conservare è quella scaricata sul tuo computer. Tre backup separati non costituiscono necessariamente lo stesso salvataggio: per il ripristino completo usa Backup completo.</div>
+</section>
+<section class="library-panel studio-next"><div class="table-scroll"><table><thead><tr><th>CREATO</th><th>CONTENUTO</th><th>STATO</th><th>SCARICA</th></tr></thead><tbody>
+{% for job in page %}<tr><td>{{ job.created_at|date:'d/m/Y H:i' }}</td><td>{{ job.get_kind_display }}<span class="track-subtitle">{{ job.id }}</span></td><td>{{ job.get_status_display }}<p class="help-text">{{ job.progress }}</p></td><td>{% if job.available %}<a class="button primary small" href="{% url 'library:backup_download' job.id %}">Scarica · {{ job.size_mb }} MB</a><p class="help-text">Scade il {{ job.expires_at|date:'d/m/Y H:i' }}</p><details><summary>SHA-256</summary><p class="backup-hash">{{ job.sha256 }}</p></details>{% elif job.status == 'ready' %}<span class="help-text">Archivio non disponibile o scaduto.</span>{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="4">Non hai ancora preparato un backup.</td></tr>{% endfor %}
+</tbody></table></div><div class="panel-footer"><span>Pagina {{ page.number }} di {{ page.paginator.num_pages }}</span><nav>{% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">← Precedenti</a>{% endif %} {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Successivi →</a>{% endif %}</nav></div></section>
+</div>
+{% endblock %}

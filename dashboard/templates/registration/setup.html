@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% load static %}{% block title %}Benvenuta, radio{% endblock %}{% block content %}
+<div class="login-card"><div class="brand"><img class="brand-icon" src="{% static 'julie-radio.png' %}" alt="" width="48" height="48"> Julie<span class="brand-dot">.</span></div>
+<h1>La tua radio comincia qui.</h1><p class="intro">Crea il tuo account amministratore e scegli come iniziare.</p>
+<form method="post">{% csrf_token %}{{ form.non_field_errors }}
+{% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% if field.name == 'code' %}<p class="muted">Usa il codice nel file installation-code.txt sul server. Lo ricevi durante l’installazione.</p>{% endif %}{% if field.name == 'stream_url' %}<p class="help-text">Facoltativo: link completo dello stream, anche con indirizzo locale.</p>{% elif field.name == 'api_url' %}<p class="help-text">Facoltativo: indirizzo base delle API, senza percorsi. Puoi completarlo più avanti.</p>{% elif field.name == 'public_origins' %}<p class="help-text">Un sito per riga. * permette qualunque sito; vuoto limita l’uso allo stesso sito. Puoi modificarlo da Manutenzione.</p>{% endif %}{% endfor %}
+<p>Fuso orario: <strong>Italia · Europe/Rome</strong>, con cambio automatico tra ora solare e legale.</p><p>Se scegli un backup, lo caricherai e controllerai nel passaggio successivo prima di confermare il ripristino.</p>
+<button class="button primary full">Crea la tua radio →</button></form></div>{% endblock %}

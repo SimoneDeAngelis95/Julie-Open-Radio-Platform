@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Jingle{% endblock %}
+{% block content %}
+    <div class="page-heading">
+        <div>
+
+            <h1>Jingle<span class="heading-dot">.</span></h1>
+            <p class="intro">Il suono che accompagna la tua radio.</p>
+        </div>
+    </div>
+    <div class="detail-layout">
+        <form class="card" method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.non_field_errors }}
+            <label for="{{ form.jingle_enabled.id_for_label }}">{{ form.jingle_enabled.label }}</label>{{ form.jingle_enabled }}{{ form.jingle_enabled.errors }}
+            <label for="{{ form.jingle_every.id_for_label }}">{{ form.jingle_every.label }}</label>{{ form.jingle_every }}{{ form.jingle_every.errors }}
+            <p class="help-text">Da 1 a 100 brani tra un jingle e il successivo.</p>
+            <label for="{{ form.replacement.id_for_label }}">{{ form.replacement.label }}</label>{{ form.replacement }}{{ form.replacement.errors }}
+            <p class="help-text">L’originale viene conservato. Se la preparazione fallisce, resta il jingle attuale.</p>
+            <button class="button primary">Salva le impostazioni ↗</button>
+        </form>
+        <aside class="card">
+            <h2>Jingle attuale</h2>
+            {% if config.current_jingle %}<div class="jingle-current"><strong>{{ config.current_jingle.title }}</strong><p class="help-text">{{ config.current_jingle.duration_label }} · {% if config.jingle_enabled %}Attivo ogni {{ config.jingle_every }} brani{% else %}Disattivato{% endif %}</p><audio class="detail-audio"
+       controls
+       preload="metadata"
+       src="{% url 'library:audio' config.current_jingle.id %}"></audio></div>{% else %}<p class="help-text">Non hai ancora un jingle pronto. La musica può andare in onda anche senza.</p>{% endif %}
+            {% if config.pending_jingle %}<div class="soft-note"><strong>Sostituto: {{ config.pending_jingle.original_name }}</strong><br>{{ config.pending_jingle.get_status_display }}{% if config.pending_jingle.status == "error" %}<p>{{ config.pending_jingle.error_message }}</p>{% endif %}</div>{% if config.pending_jingle.status == "error" %}<form method="post"
+      action="{% url 'library:retry' config.pending_jingle.id %}">{% csrf_token %}<button class="button secondary">Riprova il nuovo jingle</button></form>{% else %}<a class="button secondary" href="{% url 'library:settings' %}">Aggiorna lo stato ↻</a>{% endif %}{% endif %}
+        </aside>
+    </div>
+{% endblock %}

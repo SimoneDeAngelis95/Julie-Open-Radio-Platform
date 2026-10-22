@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Cestino{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><h1>Cestino<span class="heading-dot">.</span></h1><p class="intro">File esclusi dalla Libreria e dalla radio. Ripristina i contenuti o libera spazio scegliendo quali file eliminare.</p></div>{% if page %}<a class="button secondary" href="{% url 'library:empty_trash' %}">Svuota cestino</a>{% endif %}
+</div>
+<section class="library-panel">
+{% if page %}<div class="table-scroll"><table>
+  <thead><tr><th>CONTENUTO</th><th>TIPO</th><th>SPOSTATO IL</th><th>AZIONE</th></tr></thead>
+  <tbody>{% for asset in page %}<tr>
+    <td><strong class="track-title">{{ asset.title }}</strong><span class="track-subtitle">{{ asset.original_name }}</span>{% if asset.removal_pending %}<p class="help-text">Eliminazione in corso. Il servizio riprova automaticamente.</p>{% elif asset.copies_removed %}<p class="help-text">Solo originale conservato</p>{% endif %}</td>
+    <td>{{ asset.get_category_display }}</td><td>{{ asset.trashed_at|date:"d/m/Y H:i" }}</td>
+    <td>{% if not asset.removal_pending %}<form method="post" action="{% url 'library:restore_asset' asset.id %}">{% csrf_token %}<button class="button secondary small">Ripristina ↶</button></form><a class="button secondary small" href="{% url 'library:remove_files' asset.id %}">Elimina file</a>{% else %}<span>Attendi il completamento</span>{% endif %}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>{% else %}<div class="empty-state"><h2>Il cestino è vuoto.</h2><p>I file che rimuovi dalla Libreria compariranno qui.</p><a class="button secondary" href="{% url 'library:index' %}">Torna alla Libreria</a></div>{% endif %}
+<div class="panel-footer"><span>{{ page.paginator.count }} file nel cestino</span><div>{% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">← Precedente</a>{% endif %}{% if page.has_next %}<a href="?page={{ page.next_page_number }}">Successiva →</a>{% endif %}</div></div>
+</section>
+<p class="help-text">Puoi eliminare le copie elaborate conservando l’originale oppure cancellare anche quest’ultimo, dopo conferma. Al ripristino, le appartenenze alle playlist restano e, se necessario, l’audio viene preparato di nuovo; i brani devono essere riattivati per tornare in radio.</p>
+{% endblock %}

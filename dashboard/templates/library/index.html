@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="page-heading"><div><h1>La tua libreria<span class="heading-dot">.</span></h1><p class="intro">Musica e podcast della tua radio, pronti da organizzare.</p></div><a class="button primary" href="{% url 'library:upload' %}"><span>＋</span> Carica audio</a></div>
+    <div class="stats">
+        <div><span>File in libreria</span><strong data-count="total">{{ counts.total }}</strong><small>La tua raccolta audio</small></div>
+        <div><span><i class="mini-dot"></i> Pronti</span><strong data-count="ready">{{ counts.ready }}</strong><small>Preparati per la radio</small></div>
+        <div><span><i class="mini-dot amber"></i> In preparazione</span><strong data-count="waiting">{{ counts.waiting }}</strong><small>Ci stiamo lavorando</small></div>
+        <div><span><i class="mini-dot red"></i> Da controllare</span><strong data-count="error">{{ counts.error }}</strong><small>File che richiedono attenzione</small></div>
+    </div>
+    <section class="library-panel"
+             data-library
+             data-status-url="{% url 'library:status' %}"><div class="panel-top"><div class="tabs"><a class="{% if not category %}selected{% endif %}"
+   href="{% url 'library:index' %}">Tutti i file</a>{% for value,label in categories %}<a class="{% if category == value %}selected{% endif %}"
+   href="?category={{ value }}">{{ label }}</a>{% endfor %}</div><span class="live-indicator"><i class="mini-dot"></i> Aggiornamento automatico</span></div>
+        <form class="filters" method="get"><input type="hidden" name="category" value="{{ category }}"><label class="search"><span aria-hidden="true">⌕</span><input name="q"
+       value="{{ q }}"
+       placeholder="Cerca un titolo, un artista o un file…"
+       aria-label="Cerca nella libreria"></label><select name="status" aria-label="Filtra per stato"><option value="">Tutti gli stati</option>{% for value,label in statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><select name="playlist" aria-label="Filtra per playlist"><option value="">Tutte le playlist</option><option value="none" {% if playlist_filter == 'none' %}selected{% endif %}>Musica senza playlist</option>{% for collection in playlists %}<option value="{{ collection.id }}" {% if playlist_filter == collection.id|stringformat:'s' %}selected{% endif %}>{{ collection.name }}</option>{% endfor %}</select><button class="button secondary small">Filtra</button></form>
+        {% if page %}<div class="table-scroll"><table class="library-table"><thead><tr><th>CONTENUTO</th><th>TIPO</th><th>PLAYLIST</th><th>DURATA</th><th>STATO</th><th><span class="sr-only">Azioni</span></th></tr></thead><tbody>{% for asset in page %}<tr data-asset="{{ asset.id }}"><td><div class="track-cell"><span class="track-icon {{ asset.category }}" aria-hidden="true">{% if asset.category == "music" %}♫{% elif asset.category == "podcasts" %}◉{% else %}≋{% endif %}</span><div><a class="track-title"
+   data-title
+   href="{% url 'library:detail' asset.id %}">{{ asset.title }}</a><span class="track-subtitle" data-artist>{% if asset.category == 'podcasts' %}{{ asset.original_name }}{% else %}{{ asset.artist|default:asset.original_name }}{% endif %}</span>
+        {% if asset.category == "music" %}<small class="rotation-label">{% if asset.is_active %}Attivo in radio{% else %}Escluso dalla radio{% endif %}</small>{% endif %}<div class="track-preview" data-preview>{% if asset.status == "ready" %}<button type="button" class="preview-trigger"
+        data-audio="{% url 'library:audio' asset.id %}"
+        aria-label="Preascolta {{ asset.title }}">▷ Preascolta</button>{% endif %}</div></div></div></td><td><span class="category-label">{{ asset.get_category_display }}</span></td><td class="playlist-column">{% if asset.category == 'music' %}<form method="post" action="{% url 'library:row_playlists' asset.id %}" id="row-playlists-{{ asset.id }}" class="row-playlists" data-row-playlists>
+{% csrf_token %}<input type="hidden" name="library_query" value="{{ request.GET.urlencode }}">
+<div class="row-playlist-menu"><button type="button" class="row-playlist-toggle" popovertarget="playlist-menu-{{ asset.id }}" aria-label="Scegli playlist per {{ asset.title }}"><span data-playlist-caption>{{ asset.playlist_caption }}</span> <span aria-hidden="true">▾</span></button>
+<div id="playlist-menu-{{ asset.id }}" class="row-playlist-options" popover><p>Scegli una o più playlist. Nessuna spunta = nessuna playlist.</p>
+{% for collection, assigned in asset.playlist_options %}<label><input type="checkbox" name="playlists" value="{{ collection.id }}" {% if assigned %}checked{% endif %}> {{ collection.name }}</label>{% empty %}<p>Non ci sono playlist. <a href="{% url 'library:playlists' %}">Creane una</a>.</p>{% endfor %}
+</div></div><button type="submit" class="button secondary small" aria-label="Conferma playlist per {{ asset.title }}">Conferma</button>
+<span class="row-playlist-feedback" role="status" aria-live="polite" data-playlist-feedback></span></form>{% else %}<span class="subtle">—</span>{% endif %}</td><td class="duration" data-duration>{{ asset.duration_label }}</td><td><span class="badge {{ asset.status }}" data-badge>{{ asset.get_status_display }}</span></td><td><a class="row-action"
+   href="{% url 'library:detail' asset.id %}"
+   aria-label="Apri {{ asset.title }}">↗</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state"><div class="empty-art" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>{% if q or category or status or playlist_filter %}<h2>Nessun file trovato.</h2><p>Prova a cambiare ricerca o filtri.</p><a class="button secondary" href="{% url 'library:index' %}">Mostra tutta la libreria</a>{% else %}<h2>La prossima onda comincia qui.</h2><p>Carica i tuoi primi brani, una puntata.<br>Julie li preparerà per la tua radio.</p><a class="button primary" href="{% url 'library:upload' %}">＋ Carica il primo audio</a>{% endif %}</div>{% endif %}
+<div class="panel-footer"><span>{{ page.paginator.count }} file{% if page.paginator.num_pages > 1 %} · Pagina {{ page.number }} di {{ page.paginator.num_pages }}{% endif %}</span><div>{% if page.has_previous %}<a href="?category={{ category|urlencode }}&status={{ status|urlencode }}&q={{ q|urlencode }}&playlist={{ playlist_filter|urlencode }}&page={{ page.previous_page_number }}">← Precedente</a>{% endif %}{% if page.has_next %}<a href="?category={{ category|urlencode }}&status={{ status|urlencode }}&q={{ q|urlencode }}&playlist={{ playlist_filter|urlencode }}&page={{ page.next_page_number }}">Successiva →</a>{% endif %}</div><span>Originali conservati fino alla tua conferma di eliminazione.</span></div></section>
+<div class="library-note">
+    <span>↳</span>
+    <p><strong>Una libreria pronta per la radio.</strong> Ogni file viene controllato e preparato prima di essere disponibile. I brani pronti e attivi entrano nella selezione casuale dai prossimi passaggi.</p>
+</div>
+{% endblock %}

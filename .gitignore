@@ -1,0 +1,33 @@
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+!.env.dashboard.example
+config/icecast.xml
+ACCESSO*.txt
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+# Station contents and runtime state
+/audio/
+/backups/
+*.sqlite3
+*.sqlite3-*
+*.dump
+*.sql
+*.tar.gz
+*.zip
+# Build and editor output
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+staticfiles/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+.idea/
+.vscode/
+.install.lock
+.env.proxy

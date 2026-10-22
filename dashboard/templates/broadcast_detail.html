@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Dettagli della trasmissione{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>{{ job.asset.title }}</h1><p class="intro">{{ job.scheduled_at|date:'l d F Y · H:i' }} · Orario di Roma</p></div></div>
+<section class="card"><h2>{{ job.calendar_label }}</h2><p>Durata: {{ job.asset.duration_label }}</p><p>{% if job.is_public %}Visibile nel calendario pubblico{% else %}Calendario privato{% endif %}{% if job.series_id %} · Serie settimanale{% if job.is_exception %} · Puntata modificata singolarmente{% endif %}{% endif %}</p>
+{% if job.outcome %}<p>{{ job.outcome }}</p>{% endif %}
+{% if job.asset.status == 'pending' or job.asset.status == 'processing' %}<p class="help-text">Durata non ancora disponibile: verifica le sovrapposizioni quando il file sarà pronto.</p>{% endif %}
+<div class="form-actions">{% if job.status != 'scheduled' and not job.asset.trashed_at and job.asset.is_active and job.asset.status != 'error' %}<a class="button primary" href="{% url 'library:broadcast_create' %}?asset={{ job.asset_id }}">Programma di nuovo</a>{% endif %}{% if job.status == 'scheduled' %}<a class="button primary" href="{% url 'library:broadcast_edit' job.id %}">Modifica {% if job.series_id %}solo questa puntata{% else %}appuntamento{% endif %}</a><form method="post" action="{% url 'library:broadcast_cancel' job.id %}">{% csrf_token %}<button class="button">Annulla {% if job.series_id %}solo questa puntata{% else %}appuntamento{% endif %}</button></form>{% endif %}{% if job.series_id and job.series.active %}<a class="button" href="{% url 'library:series_edit' job.series_id %}">Modifica serie</a>{% endif %}<a class="button" href="{% url 'library:calendar' %}?month={{ month_key }}">Torna al calendario</a></div></section>
+{% endblock %}

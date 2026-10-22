@@ -1,0 +1,36 @@
+# Supply three distinct hostnames through .env.proxy. No station-specific domain.
+{$JULIE_REGIA_HOST} {
+    reverse_proxy dashboard:8000 {
+        header_up X-Forwarded-Proto https
+    }
+}
+
+{$JULIE_API_HOST} {
+    @public {
+        path /api/v1/* /calendar.ics
+        method GET HEAD OPTIONS
+    }
+    handle @public {
+        reverse_proxy dashboard:8000 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+    handle {
+        respond 404
+    }
+}
+
+{$JULIE_STREAM_HOST} {
+    @audio {
+        path /stream.mp3
+        method GET HEAD
+    }
+    handle @audio {
+        reverse_proxy icecast:8000 {
+            flush_interval -1
+        }
+    }
+    handle {
+        respond 404
+    }
+}

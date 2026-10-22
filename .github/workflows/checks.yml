@@ -1,0 +1,41 @@
+name: Checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  postgres-tests:
+    runs-on: ubuntu-latest
+    container: python:3.13-slim-trixie
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: julie
+          POSTGRES_USER: julie
+          POSTGRES_PASSWORD: ci-only-password
+        options: >-
+          --health-cmd "pg_isready -U julie -d julie"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DJANGO_SECRET_KEY: ci-only-secret-key
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: julie
+      POSTGRES_USER: julie
+      POSTGRES_PASSWORD: ci-only-password
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ffmpeg postgresql-client-17
+          pip install -r dashboard/requirements.txt
+      - name: Check installation generator
+        run: python scripts/test_installation.py
+      - name: Build static assets
+        run: python dashboard/manage.py collectstatic --noinput
+      - name: Check migrations
+        run: python dashboard/manage.py makemigrations --check --dry-run
+      - name: Test with PostgreSQL
+        run: python dashboard/manage.py test library --noinput

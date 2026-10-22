@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Podcast{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div>
+
+    <h1>Podcast<span class="heading-dot">.</span></h1>
+    <p class="intro">Scegli quali episodi rendere disponibili nel Replay.</p>
+  </div>
+  <a class="button primary" href="{% url 'library:upload' %}">Carica un podcast</a>
+</div>
+<section class="library-panel">
+  <form method="get" class="filters">
+    <input type="search" name="q" value="{{ q }}" placeholder="Cerca un podcast…" aria-label="Cerca podcast">
+    <select name="visibility" aria-label="Disponibilità Replay">
+      <option value="">Tutti</option>
+      <option value="private" {% if visibility == 'private' %}selected{% endif %}>Non disponibili</option>
+      <option value="public" {% if visibility == 'public' %}selected{% endif %}>Disponibili</option>
+    </select>
+    <button class="button secondary">Filtra</button>
+  </form>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>EPISODIO</th><th>AUDIO</th><th>REPLAY</th><th>AZIONI</th></tr></thead>
+      <tbody>
+        {% for item in page %}
+        <tr>
+          <td><strong class="track-title">{{ item.title }}</strong><span class="track-subtitle">{{ item.duration_label }}</span></td>
+          <td><span class="badge {{ item.status }}">{{ item.get_status_display }}</span></td>
+          <td>
+            <form method="post" action="{% url 'library:podcast_availability' item.id %}" class="replay-choice">
+              {% csrf_token %}
+              <select name="availability" aria-label="Replay per {{ item.title }}">
+                <option value="available" {% if item.auto_publish and not item.replay_after_broadcast %}selected{% endif %}>Disponibile</option>
+                <option value="unavailable" {% if not item.auto_publish or item.replay_after_broadcast %}selected{% endif %}>Non disponibile</option>
+              </select>
+              <button class="button secondary small">Conferma</button>
+            </form>
+            {% if item.auto_publish and not item.public_available %}<p class="help-text" role="status">{{ item.publication_label }}</p>{% endif %}
+          </td>
+          <td>
+            <a class="button secondary small" href="{% url 'library:podcast_edit' item.id %}">Modifica</a>
+            {% if item.public_available %}<a class="button secondary small" href="{{ item.public_url }}">Ascolta</a>{% endif %}
+          </td>
+        </tr>
+        {% empty %}<tr><td colspan="4">Nessun podcast trovato.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="panel-footer">
+    <span>{{ page.paginator.count }} podcast</span>
+    <div>
+      {% if page.has_previous %}<a href="?visibility={{ visibility|urlencode }}&q={{ q|urlencode }}&page={{ page.previous_page_number }}">← Precedenti</a>{% endif %}
+      {% if page.has_next %}<a href="?visibility={{ visibility|urlencode }}&q={{ q|urlencode }}&page={{ page.next_page_number }}">Successivi →</a>{% endif %}
+    </div>
+  </div>
+</section>
+<p class="help-text">Gli episodi disponibili sono ascoltabili appena l’MP3 è pronto, anche senza essere mai andati in onda. La programmazione radio resta indipendente.</p>
+{% endblock %}
