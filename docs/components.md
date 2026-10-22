@@ -1,6 +1,6 @@
 # Components and credits
 
-Julie began as a radio project at **I.I.S. Medaglia D’Oro**, an Italian secondary school now known as **I.I.S. San Benedetto – Sede Medaglia D’Oro**. It is designed to be adapted and reused by other schools and communities.
+Julie began as a radio project at **I.I.S. Medaglia D’Oro**, a business and commerce technical secondary school in Cassino, Italy, now known as **I.I.S. San Benedetto – Sede Medaglia D’Oro**. It is designed to be adapted and reused by other schools and communities.
 
 Project code is released under **GNU GPL v3.0**, SPDX identifier `GPL-3.0-only`; see [LICENSE](../LICENSE). Documentation and the radio icon included in the repository use the same project license. No demonstration recordings or music catalogues are included. Station operators are responsible for the rights to the content they broadcast.
 

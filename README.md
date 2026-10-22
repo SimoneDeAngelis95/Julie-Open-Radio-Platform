@@ -4,7 +4,7 @@
 
 A free software platform for running a school radio station from a browser: music, jingles, podcasts and live broadcasts, with an automated playout engine that keeps working when the dashboard is closed.
 
-The project was born at **I.I.S. Medaglia D’Oro**, an Italian secondary school now known as **I.I.S. San Benedetto – Sede Medaglia D’Oro**, to build a simple platform that other schools and communities can reuse.
+The project was born at **I.I.S. Medaglia D’Oro**, a business and commerce technical secondary school in Cassino, Italy, now known as **I.I.S. San Benedetto – Sede Medaglia D’Oro**, to build a simple platform that other schools and communities can reuse.
 
 ## Features
 
