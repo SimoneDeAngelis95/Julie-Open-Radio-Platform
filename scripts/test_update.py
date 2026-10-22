@@ -4,6 +4,7 @@
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -345,6 +346,25 @@ class UpdateTests(unittest.TestCase):
         self.assertFalse(any(c[0] == "up" for c in self.updater.calls))
         self.assertTrue((self.root / "backups/updates/INCOMPLETE").exists())
         self.assert_data_intact()
+
+    def test_private_backup_umask_keeps_checked_out_source_readable(self):
+        for name in (".env", ".env.dashboard", "config/icecast.xml"):
+            (self.root / name).chmod(0o600)
+        previous = os.umask(0o077)
+        try:
+            self.updater.execute()
+            self.assertEqual((self.root / "README.md").stat().st_mode & 0o777, 0o644)
+            for name in (".env", ".env.dashboard", "config/icecast.xml"):
+                self.assertEqual((self.root / name).stat().st_mode & 0o777, 0o600)
+            for name in ("full-backup.zip", "local-config.tar.gz", "source.bundle"):
+                self.assertEqual(
+                    (self.updater.checkpoint / name).stat().st_mode & 0o777, 0o600
+                )
+            probe = self.updater.checkpoint / "private-probe"
+            probe.touch()
+            self.assertEqual(probe.stat().st_mode & 0o777, 0o600)
+        finally:
+            os.umask(previous)
 
 
 if __name__ == "__main__":

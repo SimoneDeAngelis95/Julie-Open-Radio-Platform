@@ -131,6 +131,9 @@ class Updater:
                 stderr=subprocess.STDOUT,
                 timeout=timeout,
                 check=False,
+                # Git must create readable application sources for non-root containers.
+                # Keep the private parent umask for backups, configuration and all other commands.
+                umask=0o022 if args[:2] == ["git", "checkout"] else -1,
             )
         except (OSError, subprocess.TimeoutExpired) as error:
             raise UpdateError(f"Comando non completato: {args[0]}.") from error

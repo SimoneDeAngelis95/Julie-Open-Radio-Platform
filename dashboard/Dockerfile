@@ -5,6 +5,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-RUN DJANGO_SECRET_KEY=build-time-static-only python manage.py collectstatic --noinput
+# Image sources must be readable regardless of the host checkout's umask.
+RUN chmod -R a+rX /app && DJANGO_SECRET_KEY=build-time-static-only python manage.py collectstatic --noinput
 USER julie
 CMD ["gunicorn", "julie.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "2", "--timeout", "600", "--access-logfile", "-"]

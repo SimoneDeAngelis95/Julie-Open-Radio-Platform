@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep checked-out application sources readable during updates while preserving private backup permissions; normalize source readability inside the dashboard image.
+
 - Read decoded duration from FFmpeg’s completed progress report, accepting unavailable startup timestamps without accepting an incomplete final report.
 
 - Dismiss upload exit protection before the successful redirect to avoid a false unsaved-changes warning.
