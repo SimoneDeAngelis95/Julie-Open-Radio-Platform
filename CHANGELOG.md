@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Read decoded duration from FFmpeg’s completed progress report, accepting unavailable startup timestamps without accepting an incomplete final report.
+
 - Dismiss upload exit protection before the successful redirect to avoid a false unsaved-changes warning.
 
 - Refresh the host resource overview with distinct metric tiles, CPU/RAM meters and explicit freshness indicators.

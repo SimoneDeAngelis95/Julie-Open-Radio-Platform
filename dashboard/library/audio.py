@@ -84,16 +84,25 @@ def measure(path, deadline):
     if not all(math.isfinite(value) for value in values.values()):
         raise AudioError("Il file è silenzioso o il volume non è misurabile.")
     try:
-        # Output timestamps are rebuilt from decoded samples, not container estimates.
-        durations = [
-            int(line.split("=", 1)[1]) / 1_000_000
-            for line in result.stdout.splitlines()
-            if line.startswith("out_time_us=")
-        ]
-        duration = durations[-1]
+        # Startup progress may contain N/A before FFmpeg has emitted audio.
+        # Only the completed report is authoritative; never fall back to a header
+        # estimate or an intermediate counter if the final duration is missing.
+        report = {}
+        final_duration_us = None
+        for line in result.stdout.splitlines():
+            key, separator, value = line.partition("=")
+            if not separator:
+                continue
+            if key == "progress":
+                if value == "end":
+                    final_duration_us = report.get("out_time_us")
+                report = {}
+            else:
+                report[key] = value
+        duration = int(final_duration_us) / 1_000_000
         if not math.isfinite(duration) or duration <= 0:
             raise ValueError
-    except (ValueError, IndexError) as error:
+    except (ValueError, TypeError, OverflowError) as error:
         raise AudioError("Durata dell’audio decodificato non disponibile.") from error
     values["duration"] = duration
     return values
