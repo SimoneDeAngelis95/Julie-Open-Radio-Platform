@@ -6,7 +6,7 @@ command -v python3 >/dev/null || { echo 'Installa Python 3 prima di continuare.'
 case "${1:-}" in
     -h|--help) python3 scripts/configure.py --help; exit 0 ;;
 esac
-command -v docker >/dev/null || { echo 'Installa Docker Engine e il plugin Compose: docs/installazione.md' >&2; exit 1; }
+command -v docker >/dev/null || { echo 'Installa Docker Engine e il plugin Compose: docs/installation.md' >&2; exit 1; }
 if ! docker info >/dev/null 2>&1; then sudo -v; fi
 python3 scripts/configure.py "$@"
 ./julie config --quiet
@@ -14,4 +14,8 @@ python3 scripts/configure.py "$@"
 ./julie run --rm --no-deps liquidsoap --check /app/radio.liq
 ./julie up -d
 ./julie ps
-printf '\nApri il pannello all’indirizzo indicato in ACCESSO-LOCALE.txt.\nIl codice iniziale è in audio/library/installation-code.txt.\n'
+printf '\nJulie è avviata.\n'
+if [ -f ACCESSO-LOCALE.txt ]; then
+    sed -n '/^Pannello:/p' ACCESSO-LOCALE.txt
+fi
+./julie exec -T dashboard python manage.py show_setup_code

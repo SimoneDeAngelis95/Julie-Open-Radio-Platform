@@ -35,10 +35,12 @@ For a server accessible on a local network, replace the example address with the
 The installer creates secrets, directories and the Icecast configuration, builds the images, checks Liquidsoap and starts the services. It does not create a default account. Once startup completes:
 
 1. Open `http://SERVER-ADDRESS:8010`.
-2. Read `audio/library/installation-code.txt` on the server and enter the code on the setup page.
+2. Enter the installation code displayed at the end of the installer on the setup page.
 3. Create the administrator, name the station and choose an empty library or a full backup import.
 
-To read the code over SSH:
+The installer displays the code only while initial setup is still open. Running it again after an account exists does not display a code or reopen setup. To display a valid existing code again without reinstalling, run `./julie exec -T dashboard python manage.py show_setup_code`.
+
+The code is also stored on the server. To read it over SSH:
 
 ```sh
 cat audio/library/installation-code.txt

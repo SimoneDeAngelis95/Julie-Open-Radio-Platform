@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Show the existing installation code and panel address at the end of first-run installation.
+
 - Drag-and-drop audio selection and automatic upload batches, preserving per-file metadata and playlist choices.
 - Read-only Linux host CPU, memory, uptime and temperature monitoring on the station status page.
 - Audio preparation verifies decoded duration instead of trusting container duration estimates.
