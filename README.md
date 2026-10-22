@@ -4,7 +4,7 @@
 
 A free software platform for running a school radio station from a browser: music, jingles, podcasts and live broadcasts, with an automated playout engine that keeps working when the dashboard is closed.
 
-The project was born at **I.I.S. Medaglia D’Oro**, now **I.I.S. San Benedetto – Sede Medaglia D’Oro**, to build a simple platform that other schools and communities can reuse.
+The project was born at **I.I.S. Medaglia D’Oro**, an Italian secondary school now known as **I.I.S. San Benedetto – Sede Medaglia D’Oro**, to build a simple platform that other schools and communities can reuse.
 
 ## Features
 
@@ -20,7 +20,7 @@ The interface is currently **in Italian**. Multilingual support is a possible fu
 
 **Linux is the recommended platform**, including headless servers. Julie runs Linux containers with Docker Compose. Read [Installation](docs/installation.md) before running the scripts: Docker Engine, Compose and Python 3 are required.
 
-See [docs](docs/README.md) for the full documentation.
+Julie runs from the directory where you clone the repository. Audio is stored in `audio/library/` inside that directory, outside the containers. See [data locations](docs/installation.md#data-locations) and [docs](docs/README.md) for details.
 
 **Status:** first beta (`0.1.0-beta.1`). Validate the complete installation on the target system before continuous use. Extended operation and recovery after unexpected interruptions still need further testing.
 

@@ -63,6 +63,27 @@ The `julie` file in the repository root is a command script, invoked as `./julie
 
 Do not use `down -v`: it deletes the PostgreSQL volume. Do not use `--remove-orphans` while migrating an existing installation.
 
+## Data locations
+
+Julie runs from the directory where you clone the repository and run `./install.sh`. The installer does not copy the project into a fixed system directory such as `/opt`. For example, cloning into `/home/radio/Julie-Open-Radio-Platform` places the following paths inside that directory:
+
+| Path | Contents |
+| --- | --- |
+| `audio/library/originals/` | Uploaded originals |
+| `audio/library/ready/` | Processed copies for playout |
+| `audio/library/ready/replay/` | MP3 copies for public Replay |
+| `audio/library/work/` and `staging/` | Temporary processing and upload files |
+| `backups/exports/` | Backups prepared by the application |
+| `.env`, `.env.dashboard`, `config/icecast.xml` | Local configuration and credentials |
+
+Audio and exported backups are bind-mounted host directories: they are not stored in a container’s writable layer and survive container replacement. Deleting the project directory also deletes these files. Do not delete or move it as if it contained only source code.
+
+PostgreSQL data is separate, in the Docker named volume `julie_dashboard_db` scoped to the Compose project (normally `julie_julie_dashboard_db`). Its physical location is managed by Docker. A copy of the project directory alone is therefore not a complete station backup; use the full-backup feature to include database and audio consistently.
+
+The application mounts `audio/library/` as `/data`; Liquidsoap reads the same files as `/audio/library/`. These container paths refer to the host directories listed above. No audio files or credentials are tracked in Git.
+
+Choose a location with enough storage before installation. An external disk can host the project and its audio directories, provided it is mounted consistently and has the required permissions. Moving only the audio to another disk requires an explicit change to the volume configuration; editing a public URL in the dashboard does not change storage paths.
+
 ## Files and permissions
 
 The installation owner must be able to read and write the project directory. Application processes use the UID and GID recorded in `.env` during setup. Check ownership and permissions when moving data between users or filesystems. `.env`, `.env.dashboard` and `config/icecast.xml` contain passwords and must not be published.
