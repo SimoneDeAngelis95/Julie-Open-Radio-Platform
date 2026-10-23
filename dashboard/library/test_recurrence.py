@@ -32,6 +32,20 @@ class RecurrenceTests(CalendarTests):
         self.assertEqual(response.status_code, 302, response.content.decode())
         return BroadcastSeries.objects.latest("updated_at"), data
 
+    def test_new_schedule_is_public_by_default_but_can_be_private(self):
+        from .forms import BroadcastForm
+
+        self.assertTrue(BroadcastForm()["is_public"].value())
+        fields = self.fields()
+        fields.pop("is_public")
+        form = BroadcastForm(data=fields)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertFalse(form.cleaned_data["is_public"])
+        private = Broadcast(asset=self.asset, scheduled_at=timezone.now(), is_public=False)
+        private._state.adding = False
+        self.assertFalse(BroadcastForm(instance=private)["is_public"].value())
+        self.assertFalse(BroadcastForm(initial={"is_public": False})["is_public"].value())
+
     def test_weekly_dates_share_audio_and_single_occurrence_is_editable(self):
         series, _ = self.create()
         jobs = list(series.broadcasts.order_by("scheduled_at"))

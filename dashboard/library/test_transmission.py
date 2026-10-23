@@ -133,6 +133,20 @@ class TransmissionTests(TestCase):
         self.assertEqual(due.status, "skipped")
         self.assertEqual(future.status, "scheduled")
 
+    def test_output_confirmation_waits_for_engine_clock(self):
+        for expected, replies in [("off", ["on", "on", "off"]), ("on", ["off", "on"])]:
+            with patch("library.engine.command", side_effect=replies), patch("library.transmission.time.sleep") as sleep:
+                self.assertTrue(transmission.output_confirmed(expected))
+                self.assertEqual(sleep.call_count, len(replies) - 1)
+
+    def test_output_confirmation_is_bounded_and_rejects_unknown_status(self):
+        with patch("library.engine.command", return_value="on") as command, patch("library.transmission.time.sleep"):
+            self.assertFalse(transmission.output_confirmed("off"))
+            self.assertEqual(command.call_count, 31)
+        with patch("library.engine.command", return_value="unknown"), patch("library.transmission.time.sleep") as sleep:
+            self.assertFalse(transmission.output_confirmed("off"))
+            sleep.assert_not_called()
+
     def test_uncertain_stop_or_start_keeps_pause_and_blocks_dispatch(self):
         with (
             patch("library.engine.command", side_effect=EngineError("offline")),

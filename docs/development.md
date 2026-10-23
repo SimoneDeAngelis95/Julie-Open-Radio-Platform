@@ -33,7 +33,7 @@ Syntax checks and unit tests do not replace this complete-system validation. Pac
 
 ## Update a station
 
-Use `./update.sh RELEASE_TAG` from the installation directory. The updater requires a verified full backup and preserves local configuration and data mounts. It does not support downgrades or engine/topology changes. Read [Updating Julie](updating.md) for the complete process and failure recovery.
+Use `./update.sh` for main, `./update.sh -d` for dev, or `./update.sh -t RELEASE_TAG` for a specific release. Add `-b` to create and verify a full backup. The updater preserves local configuration and data mounts. It does not support downgrades or engine/topology changes. Read [Updating Julie](updating.md) for the complete process and failure recovery.
 
 A previous source tag may not support a newer database schema. Checking out old code is not a database rollback.
 

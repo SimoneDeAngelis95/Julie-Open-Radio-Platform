@@ -105,9 +105,11 @@ def reserved_path(path):
 
 
 class Updater:
-    def __init__(self, root, release):
+    def __init__(self, root, release=None, *, branch=None, backup=False):
         self.root = Path(root).resolve()
-        self.release = release
+        self.branch = branch if branch is not None else (None if release else "main")
+        self.release = release or self.branch
+        self.backup_enabled = backup
         self.checkpoint = None
         self.stopped = False
         self.code_changed = False
@@ -167,7 +169,9 @@ class Updater:
             raise UpdateError(
                 "Un aggiornamento precedente richiede verifica. Consulta backups/updates/INCOMPLETE."
             )
-        if not RELEASE.fullmatch(self.release):
+        if self.branch not in (None, "main", "dev"):
+            raise UpdateError("Sono supportati soltanto i rami main e dev.")
+        if self.branch is None and not RELEASE.fullmatch(self.release):
             raise UpdateError(
                 "Indica un tag di release, per esempio v0.1.0-beta.2; non un ramo."
             )
@@ -186,10 +190,14 @@ class Updater:
         self.current_version = self.git("show", "HEAD:VERSION")
         self.old = self.git("rev-parse", "HEAD")
         self.old_branch = self.git("branch", "--show-current")
-        self.git("fetch", "origin", "--tags", "--no-recurse-submodules")
-        self.target = self.git(
-            "rev-parse", "--verify", f"refs/tags/{self.release}^{{commit}}"
-        )
+        if self.branch:
+            ref = f"refs/remotes/origin/{self.branch}"
+            self.git("fetch", "origin", "--no-tags", "--no-recurse-submodules",
+                     f"+refs/heads/{self.branch}:{ref}")
+        else:
+            self.git("fetch", "origin", "--tags", "--no-recurse-submodules")
+            ref = f"refs/tags/{self.release}"
+        self.target = self.git("rev-parse", "--verify", f"{ref}^{{commit}}")
         if self.target == self.old:
             return False
         try:
@@ -199,8 +207,10 @@ class Updater:
                 "Downgrade o cronologia divergente: serve una procedura manuale."
             ) from None
         version = self.git("show", f"{self.target}:VERSION")
-        if version != self.release.removeprefix("v"):
+        if self.branch is None and version != self.release.removeprefix("v"):
             raise UpdateError("Il tag e il file VERSION non corrispondono.")
+        if shutil.disk_usage(self.root).free < 512 * 1024 * 1024:
+            raise UpdateError("Spazio libero insufficiente: servono almeno 512 MiB per avviare l’aggiornamento.")
         changes = self.git("diff", "--name-only", self.old, self.target).splitlines()
         if any(protected_change(path) for path in changes):
             raise UpdateError(
@@ -309,6 +319,8 @@ class Updater:
             "from_commit": self.old,
             "to_commit": self.target,
             "release": self.release,
+            "backup_requested": self.backup_enabled,
+            "branch": self.branch,
             "migration_started": self.migration_started,
             "old_branch": self.old_branch,
             "recovery_image": self.recovery_image,
@@ -450,7 +462,7 @@ class Updater:
             )
         self.prepare_checkpoint()
         print(
-            "Preparo il backup completo. Il pannello e la programmazione saranno temporaneamente in pausa.",
+            "Il pannello e la programmazione saranno temporaneamente in pausa.",
             flush=True,
         )
         self.save_state("stopping_apps")
@@ -458,11 +470,15 @@ class Updater:
         self.compose("stop", *APPS)
         self.save_state("apps_stopped")
         self.check_idle(running=False)
-        self.safety_backup()
-        print(f"Copia verificata: {self.checkpoint / 'full-backup.zip'}", flush=True)
+        if self.backup_enabled:
+            self.safety_backup()
+            print(f"Copia verificata: {self.checkpoint / 'full-backup.zip'}", flush=True)
+        else:
+            self.save_state("backup_skipped")
+            print("Backup completo non richiesto: nessuna copia di database e audio.", flush=True)
         if self.git("status", "--porcelain", "--untracked-files=normal"):
             raise UpdateError(
-                "Modifiche locali durante il backup: aggiornamento sospeso."
+                "Modifiche locali durante la preparazione: aggiornamento sospeso."
             )
         self.code_changed = True
         self.git("checkout", "--detach", self.target)
@@ -506,7 +522,7 @@ class Updater:
         sync_directory(self.root / "backups/updates")
         self.stopped = False
         print(
-            f"Aggiornamento a {self.release} completato. Backup conservato in {self.checkpoint}",
+            f"Aggiornamento a {self.release} completato. Rapporto e file di recupero in {self.checkpoint}",
             flush=True,
         )
 
@@ -518,6 +534,9 @@ class Updater:
             f"Aggiornamento richiesto: {self.current_version} ({self.old[:12]}) → {self.release} ({self.target[:12]})",
             flush=True,
         )
+        print("Backup completo: " + ("sì" if self.backup_enabled else "no"), flush=True)
+        if not self.backup_enabled:
+            print("Senza backup non è disponibile il ripristino del database dopo le migrazioni.", flush=True)
         try:
             self.apply()
         except BaseException:
@@ -548,21 +567,32 @@ class Updater:
                         flush=True,
                     )
             if self.checkpoint:
-                print(f"Backup e rapporto: {self.checkpoint}", flush=True)
+                print(f"Rapporto e file di recupero: {self.checkpoint}", flush=True)
             raise
         finally:
             if self.log:
                 self.log.close()
 
 
-def main():
+def argument_parser():
     parser = argparse.ArgumentParser(
-        description="Aggiorna una release Julie dopo un backup completo verificato."
+        description="Aggiorna Julie da main, dev o un tag. Backup completo facoltativo."
     )
-    parser.add_argument(
-        "release", help="Tag della versione da installare, per esempio v0.1.0-beta.2"
-    )
+    parser.add_argument("release", nargs="?", help="Tag (sintassi precedente, equivalente a -t TAG)")
+    target = parser.add_mutually_exclusive_group()
+    target.add_argument("-d", "--dev", action="store_true", help="Aggiorna dal ramo dev")
+    target.add_argument("-t", "--tag", help="Tag esistente da installare")
+    parser.add_argument("-b", "--backup", action="store_true", help="Crea e verifica un backup completo prima di aggiornare")
+    return parser
+
+
+def main():
+    parser = argument_parser()
     args = parser.parse_args()
+    if args.release and (args.dev or args.tag):
+        parser.error("Il tag posizionale non è combinabile con -d o -t.")
+    release = args.tag or args.release
+    branch = None if release else ("dev" if args.dev else "main")
     if os.geteuid() == 0:
         parser.error(
             "Esegui come utente normale; sudo viene richiesto soltanto per Docker."
@@ -575,7 +605,7 @@ def main():
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
                 raise UpdateError("Un altro aggiornamento è già in corso.") from None
-            Updater(root, args.release).execute()
+            Updater(root, release, branch=branch, backup=args.backup).execute()
     except (UpdateError, OSError, ValueError, KeyError, zipfile.BadZipFile) as error:
         parser.exit(1, f"Aggiornamento non completato: {error}\n")
     except KeyboardInterrupt:

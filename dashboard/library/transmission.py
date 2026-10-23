@@ -3,6 +3,7 @@
 import fcntl
 import json
 import os
+import time
 from contextlib import contextmanager
 
 from django.utils import timezone
@@ -79,6 +80,18 @@ def clear_podcasts(state, now):
         )
 
 
+def output_confirmed(expected):
+    """Liquidsoap applies output start/stop asynchronously on its clock."""
+    for attempt in range(31):
+        status = engine.command("output.icecast.status")
+        if status == expected:
+            return True
+        if status not in {"on", "off"} or attempt == 30:
+            return False
+        time.sleep(0.1)
+    return False
+
+
 def change(action):
     if action not in {"suspend", "resume"}:
         raise TransmissionError("Azione non valida.")
@@ -106,7 +119,7 @@ def change(action):
             os.replace(temporary, path)
             # Persist intent before commands: an uncertain reply must still block dispatch.
             engine.command("output.icecast.stop")
-            if engine.command("output.icecast.status") != "off":
+            if not output_confirmed("off"):
                 raise TransmissionError(
                     "Arresto non confermato. La programmazione resta sospesa: riprova."
                 )
@@ -117,7 +130,7 @@ def change(action):
             clear_podcasts(state, now)
             skip_due(now)
             engine.command("output.icecast.start")
-            if engine.command("output.icecast.status") != "on":
+            if not output_confirmed("on"):
                 raise TransmissionError(
                     "Ripartenza non confermata. La sospensione è conservata: riprova."
                 )

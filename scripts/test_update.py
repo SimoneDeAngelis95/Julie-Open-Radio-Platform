@@ -8,6 +8,7 @@ import os
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 from pathlib import Path
 
@@ -19,7 +20,7 @@ spec.loader.exec_module(update)
 
 class SimulatedDocker(update.Updater):
     def __init__(self, root, release):
-        super().__init__(root, release)
+        super().__init__(root, release, backup=True)
         self.calls = []
         self.fail_at = None
         self.backup_info = None
@@ -291,6 +292,78 @@ class UpdateTests(unittest.TestCase):
         self.updater.execute()
         self.assertFalse(self.updater.calls)
         self.assertIsNone(self.updater.checkpoint)
+
+    def test_low_space_is_refused_even_without_backup(self):
+        self.updater.backup_enabled = False
+        with patch.object(update.shutil, "disk_usage") as usage:
+            usage.return_value.free = 0
+            with self.assertRaises(update.UpdateError):
+                self.updater.execute()
+        self.assertFalse(any(c[0] == "stop" for c in self.updater.calls))
+        self.assert_data_intact()
+
+    def test_main_without_backup_preserves_data(self):
+        self.updater.branch = "main"
+        self.updater.release = "main"
+        self.updater.backup_enabled = False
+        self.updater.execute()
+        self.assertEqual(self.git("rev-parse", "HEAD"), self.target)
+        self.assertFalse((self.updater.checkpoint / "full-backup.zip").exists())
+        state = json.loads((self.updater.checkpoint / "state.json").read_text())
+        self.assertFalse(state["backup_requested"])
+        self.assertEqual(state["phase"], "completed")
+        self.assertFalse(any(update.BACKUP_CODE in call for call in self.updater.calls))
+        self.assert_data_intact()
+
+    def test_dev_with_backup(self):
+        self.git("branch", "dev", self.target)
+        self.updater.branch = "dev"
+        self.updater.release = "dev"
+        self.updater.execute()
+        self.assertTrue((self.updater.checkpoint / "full-backup.zip").is_file())
+        self.assert_data_intact()
+
+    def test_missing_branch_does_not_use_stale_remote_ref(self):
+        self.git("update-ref", "refs/remotes/origin/dev", self.target)
+        self.updater.branch = "dev"
+        self.updater.release = "dev"
+        with self.assertRaises(update.UpdateError):
+            self.updater.execute()
+        self.assertFalse(any(c[0] == "stop" for c in self.updater.calls))
+
+    def test_failure_without_backup_before_migration_recovers_old_code(self):
+        self.updater.backup_enabled = False
+        self.updater.fail_at = "build"
+        with self.assertRaises(update.UpdateError):
+            self.updater.execute()
+        self.assertEqual(self.git("rev-parse", "HEAD"), self.old)
+        self.assert_data_intact()
+
+    def test_failure_without_backup_after_migration_requires_review(self):
+        self.updater.backup_enabled = False
+        self.updater.fail_at = "health"
+        with self.assertRaises(update.UpdateError):
+            self.updater.execute()
+        self.assertEqual(self.git("rev-parse", "HEAD"), self.target)
+        self.assertTrue((self.root / "backups/updates/INCOMPLETE").exists())
+        state = json.loads((self.updater.checkpoint / "state.json").read_text())
+        self.assertEqual(state["phase"], "manual_recovery_required")
+        self.assertFalse(state["backup_requested"])
+        self.assert_data_intact()
+
+    def test_cli_target_and_backup_options(self):
+        parser = update.argument_parser()
+        args = parser.parse_args([])
+        self.assertFalse(args.backup)
+        self.assertFalse(args.dev)
+        self.assertIsNone(args.tag)
+        args = parser.parse_args(["-d", "-b"])
+        self.assertTrue(args.dev and args.backup)
+        args = parser.parse_args(["-t", "v0.1.1", "-b"])
+        self.assertEqual(args.tag, "v0.1.1")
+        self.assertTrue(args.backup)
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["-d", "-t", "v0.1.1"])
 
     def test_branch_name_is_not_accepted(self):
         self.updater.release = "main"

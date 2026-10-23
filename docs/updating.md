@@ -1,26 +1,33 @@
 # Updating Julie
 
-Use the release updater from the installation directory:
+Run the updater from the installation directory as the regular installation owner, not with sudo. Docker may request sudo separately.
 
-```sh
-./update.sh v0.1.0-beta.2
-```
+| Command | Target | Full backup |
+| --- | --- | --- |
+| `./update.sh` | Latest `main` commit | No |
+| `./update.sh -b` | Latest `main` commit | Yes |
+| `./update.sh -d` | Latest `dev` commit | No |
+| `./update.sh -d -b` | Latest `dev` commit | Yes |
+| `./update.sh -t TAG` | Existing release tag | No |
+| `./update.sh -t TAG -b` | Existing release tag | Yes |
 
-The version above is an example. Choose an **existing published release tag** and read its release notes first. The updater does not select an unreleased branch or invent a tag. Run it as the regular installation owner, not with sudo; Docker may request sudo separately.
+Use `./update.sh --help` for options. `-d` and `-t` cannot be combined. The previous positional syntax, `./update.sh TAG`, remains accepted and now also requires `-b` to request a full backup.
 
-Do not run `git pull` or check out the new tag first: the updater fetches tags, verifies the target and changes the source only after making a backup. The working tree must be clean. Local secrets and audio are ignored by Git and remain in place.
+`main` is the normal installation channel; `dev` contains development work. Read the release notes before updating. For a station in use, `./update.sh -b` is recommended. Without `-b`, database and audio are **not backed up**, and a database migration cannot be undone using the update recovery files alone.
+
+Do not run `git pull` or check out the target first: the updater fetches the selected remote branch or tags, verifies the destination and pins its commit for the whole operation. The working tree must be clean. Local secrets and audio are ignored by Git and remain in place. The resulting checkout is detached; run the updater again to follow the latest remote branch.
 
 ## What it does
 
-1. Checks the requested tag, version, history, running services and data mounts. Downgrades and divergent histories are refused.
+1. Checks the requested branch or tag, version, history, running services and data mounts. At least 512 MiB must be free to begin; image builds and an optional backup may need substantially more. Downgrades and divergent histories are refused.
 2. Refuses releases that change the engine, service topology or installation scripts. Those need the manual procedure in their release notes.
 3. Saves the current source history, local configuration and a recovery reference to the existing dashboard image.
 4. Stops the dashboard, audio worker, scheduler, listener collector and backup worker. Liquidsoap, Icecast and PostgreSQL remain running.
-5. Creates a full backup using the installed application, copies it into a separate recovery directory and verifies its size, SHA-256 and full-backup manifest.
+5. With `-b`, creates a full backup using the installed application, copies it into a separate recovery directory and verifies its size, SHA-256 and full-backup manifest.
 6. Selects the target commit, verifies that local configuration and Compose settings are unchanged, builds the dashboard image and checks the application.
 7. Applies database migrations, recreates only application services and checks dashboard health and service startup.
 
-A copy of the full backup must be successfully verified before any source checkout, image build or database migration. An existing backup, reset, restore or incomplete update blocks the operation. Concurrent updater invocations are locked out.
+When `-b` is selected, the full backup must be successfully verified before any source checkout, image build or database migration. Without `-b`, the same service, data-mount and configuration checks still run, but the full-backup step is skipped. An existing backup, reset, restore or incomplete update blocks the operation. Concurrent updater invocations are locked out.
 
 If the requested source commit is already selected, the script does nothing. This is not a repair command for a partly updated installation; review any incomplete-update record and do not use manual Git commands to bypass it.
 
@@ -30,7 +37,7 @@ The updater does not delete audio directories, replace local `.env` files, chang
 
 The dashboard and background jobs are unavailable during the operation. The running audio engine continues with its existing sources and rotation; new scheduled podcasts are not dispatched while the scheduler is stopped. Some appointments may be missed. Choose a maintenance window and avoid updating close to a scheduled broadcast.
 
-Database migrations can change stored data as required by a release. The verified full backup provides a recovery point, but it does not replace an external copy or protect against disk failure. Download a full backup to another device before important upgrades.
+Database migrations can change stored data as required by a release. When requested, the verified full backup provides a recovery point, but it does not replace an external copy or protect against disk failure. Download a full backup to another device before important upgrades.
 
 ## Recovery files
 
@@ -44,12 +51,14 @@ It contains:
 
 | File | Purpose |
 | --- | --- |
-| `full-backup.zip` | Verified station backup, once preparation succeeds |
-| `full-backup.sha256` | Checksum of the recovery archive |
+| `full-backup.zip` | Verified station backup, only with `-b` |
+| `full-backup.sha256` | Checksum of the recovery archive, only with `-b` |
 | `local-config.tar.gz` | Local configuration, including secrets |
 | `source.bundle` | Previous source history |
 | `state.json` | Target, previous commit, phase and recovery image reference |
 | `update.log` | Command results for diagnosis |
+
+Source history, local configuration, the recovery image reference and the journal are retained even without `-b`; they are small recovery aids, not a full station backup.
 
 These copies are outside the expiring browser-download directory. **They are not deleted automatically after 24 hours.** Keep them private and monitor free space. The previous Docker image also retains a `julie-update-recovery:...` tag until deliberately removed.
 

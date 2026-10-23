@@ -294,6 +294,8 @@ class BroadcastForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.editing_series = kwargs.pop("series", None)
         super().__init__(*args, **kwargs)
+        if self.instance._state.adding and self.editing_series is None:
+            self.initial.setdefault("is_public", True)
         candidates = Asset.objects.filter(
             category=Asset.Category.PODCAST,
             status__in=[
