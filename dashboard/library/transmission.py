@@ -1,18 +1,35 @@
 """Temporary, engine-session-scoped suspension. Maintenance stops stay separate."""
 
+import fcntl
 import json
 import os
+from contextlib import contextmanager
 
 from django.utils import timezone
 
 from . import engine
-from .backup_guard import data_gate, reset_requested
+from .backup_guard import backup_requested, data_gate
 from .models import Broadcast
 from .storage import data_path
 
 
 class TransmissionError(Exception):
     pass
+
+
+@contextmanager
+def control_gate(exclusive=False):
+    path = data_path("locks/transmission-control.lock")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as handle:
+        try:
+            fcntl.flock(
+                handle, (fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH) | fcntl.LOCK_NB
+            )
+        except BlockingIOError:
+            yield None
+        else:
+            yield handle
 
 
 def marker():
@@ -65,13 +82,17 @@ def clear_podcasts(state, now):
 def change(action):
     if action not in {"suspend", "resume"}:
         raise TransmissionError("Azione non valida.")
-    with data_gate(exclusive=True) as gate:
+    with data_gate() as gate, control_gate(exclusive=True) as control:
         if (
             gate is None
-            or reset_requested()
+            or backup_requested()
             or data_path("locks/radio-stopped").exists()
         ):
             raise TransmissionError("Completa prima la manutenzione della radio.")
+        if control is None:
+            raise TransmissionError(
+                "Un comando della regia è in corso. Riprova fra un secondo."
+            )
         state = engine.get_state()
         path = marker()
         now = timezone.now()

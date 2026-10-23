@@ -191,10 +191,12 @@ def _tick(now=None):
 def tick(*args, **kwargs):
     from .backup_guard import data_gate, reset_requested
     from .storage import data_path
+    from .transmission import control_gate
 
-    with data_gate() as gate:
+    with data_gate() as gate, control_gate() as control:
         if (
             gate is None
+            or control is None
             or reset_requested()
             or data_path("locks/radio-stopped").exists()
         ):

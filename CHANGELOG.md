@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Allow transmission controls through the request/audio shared gate while serializing them separately against calendar dispatch.
+
 - Rename Liquidsoap local variables to avoid built-in shadowing warnings without changing playout behavior.
 
 - Add administrator-only temporary transmission suspension and resume controls; skip missed podcasts and automatically forget suspension after an audio-engine restart.

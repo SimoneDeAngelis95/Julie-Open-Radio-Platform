@@ -177,6 +177,32 @@ class TransmissionTests(TestCase):
             302,
         )
 
+    def test_real_post_can_suspend_while_audio_worker_holds_shared_gate(self):
+        from .backup_guard import data_gate
+
+        with (
+            data_gate() as worker_gate,
+            patch(
+                "library.engine.command",
+                side_effect=lambda command: (
+                    "off" if command.endswith(".status") else "OK"
+                ),
+            ),
+        ):
+            self.assertIsNotNone(worker_gate)
+            response = self.client.post(
+                "/maintenance/status/transmission/",
+                {"action": "suspend", "confirm": "yes"},
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(transmission.marker().exists())
+
+    def test_control_commands_and_scheduler_are_serialized(self):
+        with transmission.control_gate(exclusive=True):
+            self.assertFalse(tick(self.now))
+            with self.assertRaises(transmission.TransmissionError):
+                transmission.change("suspend")
+
     def test_get_only_renders_controls_and_does_not_touch_engine(self):
         with patch("library.engine.command") as command:
             self.assertContains(
