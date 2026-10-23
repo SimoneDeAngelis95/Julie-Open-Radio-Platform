@@ -22,7 +22,7 @@ The interface is currently **in Italian**. Multilingual support is a possible fu
 
 Julie runs from the directory where you clone the repository. Audio is stored in `audio/library/` inside that directory, outside the containers. See [data locations](docs/installation.md#data-locations), [release updates](docs/updating.md) and [docs](docs/README.md) for details.
 
-**Status:** first beta (`0.1.0-beta.1`). Validate the complete installation on the target system before continuous use. Extended operation and recovery after unexpected interruptions still need further testing.
+**Status:** beta (`0.1.0-beta.2`). Validate the complete installation on the target system before continuous use. Extended operation and recovery after unexpected interruptions still need further testing.
 
 ## License
 

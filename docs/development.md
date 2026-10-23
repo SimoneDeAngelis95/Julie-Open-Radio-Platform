@@ -39,7 +39,7 @@ A previous source tag may not support a newer database schema. Checking out old 
 
 ## Releases
 
-VERSION identifies the intended version: `0.1.0-beta.1`. Create the tag and GitHub release after completing the checks listed in the release notes. The main branch may include later development; install an identified version on a station server.
+`VERSION` identifies the intended version. Keep it aligned with the corresponding release tag. Create the tag and GitHub release after completing the checks listed in the release notes. The main branch may include later development; install an identified version on a station server.
 
 Docker base images are referenced by tags, so future rebuilds may include system updates. Deployments requiring exact reproducibility should also record and verify the image digests used.
 
