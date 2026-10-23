@@ -45,8 +45,8 @@ end
 music.on_track(synchronous=true, remember_started_track)
 
 def current_snapshot()
-  path = "/audio/library/playout/rotation.txt"
-  if file.exists(path) then file.contents(path) else "" end
+  rotation_snapshot_path = "/audio/library/playout/rotation.txt"
+  if file.exists(rotation_snapshot_path) then file.contents(rotation_snapshot_path) else "" end
 end
 last_snapshot = ref(current_snapshot())
 def refresh_pending_track()
@@ -70,17 +70,17 @@ active_broadcast = ref("")
 live_connected = ref(false)
 podcasts = request.queue(id="podcasts")
 
-def broadcast_event(id, event)
-  if id != "" then
-    entry = "#{id}|#{event}|#{time()}"
+def broadcast_event(broadcast_identifier, event)
+  if broadcast_identifier != "" then
+    entry = "#{broadcast_identifier}|#{event}|#{time()}"
     engine_events := list.prefix(2000, [entry, ...engine_events()])
   end
 end
 
 def podcast_started(tags)
-  id = tags["julie_broadcast"]
-  active_broadcast := id
-  broadcast_event(id, "started")
+  broadcast_identifier = tags["julie_broadcast"]
+  active_broadcast := broadcast_identifier
+  broadcast_event(broadcast_identifier, "started")
 end
 
 def podcast_finished(_, _)
@@ -106,25 +106,25 @@ live = input.harbor(id="live", buffer=1., max=5., port=8001, password=environmen
 
 def schedule_broadcast(argument)
   parts = string.split(separator="\\|", argument)
-  id = list.nth(default="", parts, 0)
+  broadcast_identifier = list.nth(default="", parts, 0)
   uri = string.concat(separator="|", list.tl(parts))
-  if list.mem(id, engine_seen()) then
+  if list.mem(broadcast_identifier, engine_seen()) then
     "duplicate"
-  elsif id == "" or uri == "" then
+  elsif broadcast_identifier == "" or uri == "" then
     "invalid"
   else
-    engine_seen := [id, ...engine_seen()]
+    engine_seen := [broadcast_identifier, ...engine_seen()]
     if live_connected() then
-      broadcast_event(id, "live")
+      broadcast_event(broadcast_identifier, "live")
       "live"
     elsif active_broadcast() != "" or podcasts.is_ready() or list.length(podcasts.queue()) > 0 then
-      broadcast_event(id, "busy")
+      broadcast_event(broadcast_identifier, "busy")
       "busy"
     else
-      active_broadcast := id
-      request = request.create('annotate:julie_broadcast="#{id}":#{uri}')
-      podcasts.push(request)
-      broadcast_event(id, "accepted")
+      active_broadcast := broadcast_identifier
+      podcast_request = request.create('annotate:julie_broadcast="#{broadcast_identifier}":#{uri}')
+      podcasts.push(podcast_request)
+      broadcast_event(broadcast_identifier, "accepted")
       "accepted"
     end
   end

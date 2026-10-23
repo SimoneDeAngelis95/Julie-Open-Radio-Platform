@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rename Liquidsoap local variables to avoid built-in shadowing warnings without changing playout behavior.
+
 - Add administrator-only temporary transmission suspension and resume controls; skip missed podcasts and automatically forget suspension after an audio-engine restart.
 
 - Stop automatic upload batches on partial storage failures and preserve successful files for safe retry.
