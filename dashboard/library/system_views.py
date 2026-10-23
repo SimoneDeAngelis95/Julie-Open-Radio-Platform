@@ -4,13 +4,15 @@ import shutil
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
+from . import engine, transmission
 from .host_metrics import read_metrics
 from .models import Asset, BackupJob, Broadcast, BroadcastSeries, RadioSnapshot
 from .storage import data_path
@@ -80,6 +82,7 @@ def index(request):
             "snapshot": snapshot,
             "fresh": fresh,
             "paused": data_path("locks/radio-stopped").exists(),
+            "temporarily_suspended": transmission.marker().exists(),
             "storage": [
                 storage_status("Audio", settings.MEDIA_ROOT),
                 storage_status("Backup", settings.BACKUP_ROOT),
@@ -103,3 +106,21 @@ def index(request):
 @never_cache
 def host_status(request):
     return JsonResponse(read_metrics())
+
+
+@user_passes_test(lambda user: user.is_authenticated and user.is_superuser)
+@require_POST
+@never_cache
+def transmission_control(request):
+    if request.POST.get("confirm") != "yes":
+        messages.error(request, "Conferma il comando della trasmissione.")
+    else:
+        try:
+            action = request.POST.get("action")
+            transmission.change(action)
+        except (transmission.TransmissionError, engine.EngineError, OSError) as error:
+            message = str(error) if not isinstance(error, OSError) else "Comando non completato. Controlla lo stato e riprova."
+            messages.error(request, message)
+        else:
+            messages.success(request, "Trasmissione sospesa temporaneamente." if action == "suspend" else "Trasmissione riattivata.")
+    return redirect("library:system_status")

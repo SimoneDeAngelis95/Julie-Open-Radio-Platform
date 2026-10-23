@@ -320,4 +320,7 @@ def resume():
         engine.command("output.icecast.start")
         if engine.command("output.icecast.status") != "on":
             raise ResetError("La radio non conferma la ripartenza. Riprova.")
+        from .transmission import marker as suspension_marker
+
+        suspension_marker().unlink(missing_ok=True)
         stopped_marker().unlink(missing_ok=True)

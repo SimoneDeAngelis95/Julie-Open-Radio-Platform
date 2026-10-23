@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from datetime import timedelta
 from pathlib import Path
+from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
@@ -38,6 +39,33 @@ class UploadMetadataTests(LibraryTests):
         self.assertEqual(first.description, "Descrizione uno")
         self.assertEqual(second.description, "Descrizione due")
         self.assertTrue(first.title_edited)
+
+    def test_partial_ajax_failure_preserves_saved_files_and_can_be_retried(self):
+        def submit():
+            return self.client.post(
+                "/upload/",
+                {"category": "music", "files": [
+                    SimpleUploadedFile("one.mp3", b"one"),
+                    SimpleUploadedFile("two.mp3", b"two"),
+                ]},
+                HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            )
+
+        def fail_second(upload, *args, **kwargs):
+            if upload.name == "two.mp3":
+                raise OSError("No space left on device")
+            return save_upload(upload, *args, **kwargs)
+
+        with patch("library.views.save_upload", side_effect=fail_second):
+            response = submit()
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("redirect", response.json())
+        self.assertIn("1 file", response.json()["error"])
+        self.assertEqual(Asset.objects.count(), 1)
+        response = submit()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("redirect", response.json())
+        self.assertEqual(Asset.objects.count(), 2)
 
     def test_single_title_fallback_and_scheduling(self):
         start = timezone.localtime(timezone.now() + timedelta(days=2)).strftime(

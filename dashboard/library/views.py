@@ -169,6 +169,14 @@ def upload(request):
                 f"{failed} file non sono stati salvati. Verifica lo spazio disponibile e riprova.",
             )
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            if failed:
+                return JsonResponse(
+                    {"error": (
+                        f"{failed} file del gruppo non sono stati salvati. "
+                        "Gli altri sono conservati. Verifica lo spazio disponibile e riprova."
+                    )},
+                    status=503,
+                )
             return JsonResponse({"redirect": reverse("library:index")})
         return redirect("library:index")
     return render_upload(request, form)

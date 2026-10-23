@@ -124,6 +124,10 @@ def _tick(now=None):
     except engine.EngineError:
         logger.warning("Regia non raggiungibile; attendo il prossimo controllo")
         return False
+    from .transmission import suspended
+
+    if suspended(state, now):
+        return True
     reconcile(state, now)
     for job in (
         Broadcast.objects.select_related("asset")

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add administrator-only temporary transmission suspension and resume controls; skip missed podcasts and automatically forget suspension after an audio-engine restart.
+
+- Stop automatic upload batches on partial storage failures and preserve successful files for safe retry.
+
 - Keep checked-out application sources readable during updates while preserving private backup permissions; normalize source readability inside the dashboard image.
 
 - Read decoded duration from FFmpeg’s completed progress report, accepting unavailable startup timestamps without accepting an incomplete final report.

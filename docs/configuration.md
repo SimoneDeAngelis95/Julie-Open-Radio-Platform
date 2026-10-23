@@ -73,3 +73,7 @@ Saving preferences affects preparations started afterwards. It does not restart 
 The audio worker processes one file at a time, giving ordinary uploads and Replay preparation priority. Closing the page does not stop the job. Progress refreshes every five seconds and reports successes, failures and skipped files; a restart resumes interrupted work. Each file is prepared from its original, and an existing ready Replay receives a matching new MP3 before either version is published. Editorial metadata, playlists, publication/privacy choices and scheduling records are preserved. A missing original, conversion error, duration mismatch or failed publication keeps the old version available. Trashed or removed content is not resurrected.
 
 New versions have distinct filenames so existing listeners and queued requests can continue using previous versions. Allow free disk space for both generations. Old versions are retained for at least 24 hours and removed only when they have no current library reference and the engine confirms they are no longer in use; cleanup waits if the engine cannot be checked. Backups include the saved preferences and media. Restore brings back the backed-up preferences, discards transient reprocessing jobs and does not restart an old job. A content reset retains the audio preferences.
+
+## Temporary transmission suspension
+
+Administrators can suspend and resume the stream from **Stato della radio**. See [transmission controls](transmission.md) for interruption, missed appointments and automatic recovery after a server restart.
