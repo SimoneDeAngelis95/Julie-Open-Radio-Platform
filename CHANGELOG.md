@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-beta.2 · 2026-10-24
+
+- Update from main, dev or a specific release tag, with an optional verified full backup (`-b`). Retain configuration, audio and update recovery records.
+- Select public calendar visibility by default for new appointments, while preserving explicit opt-out and existing appointments.
+- Wait for Liquidsoap output state confirmation when suspending or resuming transmission.
+- Refresh transmission controls and show the Julie radio logo on the login page.
 
 - Allow transmission controls through the request/audio shared gate while serializing them separately against calendar dispatch.
 
