@@ -22,6 +22,8 @@ cd Julie-Open-Radio-Platform
 
 For a published release, check out the tag listed on its release page.
 
+For a headless public server, follow the [SSH tunnel and HTTPS guide](https.md) to keep initial setup private and publish the dashboard through Caddy.
+
 ## First local startup
 
 For a server accessible on a local network, replace the example address with the server’s assigned IPv4 address:

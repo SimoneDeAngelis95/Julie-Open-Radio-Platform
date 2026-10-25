@@ -34,6 +34,8 @@ Recreate affected services after changing their environment. Public addresses sa
 
 ## Domains and HTTPS
 
+For the complete headless-server walkthrough, including first access through SSH and certificate renewal, see [Publish Julie over HTTPS](https.md).
+
 The Caddy template uses three **distinct** hostnames chosen by the installation: dashboard, API and stream. They may belong to different domains. It does not publish a public website.
 
 1. Point DNS A records to the public IP. Add AAAA records only if IPv6 is correctly routed.
