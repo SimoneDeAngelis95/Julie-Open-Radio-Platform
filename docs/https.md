@@ -110,3 +110,11 @@ Caddy renews certificates automatically while running and able to reach its cert
 Retain the `julie_proxy_data` and `julie_proxy_config` Compose volumes, normally prefixed by the project's name. They hold Caddy's persistent state, including certificate material in the data volume. Include them and `.env.proxy` in server backups. Julie's application backup does not automatically include these proxy volumes or `.env.proxy`. Treat certificate private keys as secrets. Avoid `docker compose down -v`.
 
 See [configuration](configuration.md) for the complete settings reference and [installation](installation.md) for the first startup.
+
+## Add a separate public player website
+
+The proxy optionally imports `*.caddy` files from `caddy-sites/` in the installation directory. Create that directory before recreating the proxy. Its contents are local configuration, ignored by Git; include them in server backups. These website definitions are not part of the application backup.
+
+A separate player service can join the Julie Compose network and use a dedicated DNS alias. Place its hostname and reverse-proxy definition in `caddy-sites/player.caddy`. Validate with `./julie exec -T proxy caddy validate --config /etc/caddy/Caddyfile`, then reload with `./julie exec -T proxy caddy reload --config /etc/caddy/Caddyfile`. Adding a site does not require restarting Julie or Liquidsoap. Keep port 80/443 ownership with the existing proxy.
+
+Older installations without the sites-directory mount require a deliberate proxy configuration upgrade before this feature is available. Do not bypass the guarded updater's deployment-change check.

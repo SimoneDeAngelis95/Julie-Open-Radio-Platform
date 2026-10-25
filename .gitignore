@@ -35,3 +35,6 @@ staticfiles/
 .update.lock
 
 .uninstall.lock
+
+# Local Caddy website definitions (separate from the Julie source).
+/caddy-sites/

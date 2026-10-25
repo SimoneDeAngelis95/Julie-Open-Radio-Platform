@@ -34,3 +34,6 @@
         respond 404
     }
 }
+
+# Optional public websites, kept outside the tracked configuration.
+import /etc/caddy/sites/*.caddy

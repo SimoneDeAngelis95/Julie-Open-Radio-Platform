@@ -17,6 +17,7 @@ services:
       - "443:443"
     volumes:
       - ./dashboard/deployment/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-sites:/etc/caddy/sites:ro
       - julie_proxy_data:/data
       - julie_proxy_config:/config
 volumes:
